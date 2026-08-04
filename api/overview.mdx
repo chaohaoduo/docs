@@ -1,0 +1,159 @@
+---
+title: "Google API 参考总览"
+sidebarTitle: "概览"
+description: "Google 提供 Search、Maps、Workspace 和 Cloud 等 REST API，本页汇总所有公开 API 的端点、认证方式与请求格式。"
+---
+
+Google 面向开发者提供了一套完整的公开 API 生态系统，涵盖搜索、地图、办公协作、云计算与 AI 等多个领域。所有 API 均基于 **REST** 架构设计，以 **JSON** 格式返回响应数据，并采用语义化的**版本号**管理端点，确保向后兼容性。无论您是构建小型应用还是企业级系统，Google API 都能为您提供稳定、可扩展的服务能力。
+
+---
+
+## 基础请求格式
+
+所有 Google API 共享统一的基础 URL 结构：
+
+```
+https://[service].googleapis.com/[version]/[resource]
+```
+
+| 占位符 | 说明 | 示例 |
+|---|---|---|
+| `[service]` | 服务名称 | `customsearch`、`maps`、`vision` |
+| `[version]` | API 版本号 | `v1`、`v2`、`v3` |
+| `[resource]` | 资源路径 | `search`、`geocode/json` |
+
+以下是一个使用 API 密钥进行认证的通用请求示例：
+
+```bash
+# 使用 API 密钥向 Google Custom Search API 发起请求
+curl "https://customsearch.googleapis.com/customsearch/v1" \
+  --get \
+  --data-urlencode "key=YOUR_API_KEY" \       # 您的 API 密钥
+  --data-urlencode "cx=YOUR_SEARCH_ENGINE_ID" \ # 自定义搜索引擎 ID
+  --data-urlencode "q=Google API 使用指南"      # 搜索关键词
+```
+
+<Note>
+  请将 `YOUR_API_KEY` 替换为您在 [Google Cloud Console](https://console.cloud.google.com/) 生成的真实密钥。如需了解如何获取与管理认证凭据，请参阅 [认证指南](/api/authentication)。
+</Note>
+
+---
+
+## 可用 API 列表
+
+<CardGroup cols={2}>
+  <Card title="Custom Search API" icon="magnifying-glass" href="/api/search-api">
+    通过编程方式访问 Google 搜索结果，支持网页搜索与图片搜索，可嵌入自定义搜索引擎。
+  </Card>
+  <Card title="Maps / Geocoding API" icon="map" href="/api/maps-api">
+    提供地图渲染、地理编码、路线规划与地点搜索等完整位置服务能力。
+  </Card>
+  <Card title="Workspace APIs" icon="briefcase" href="/api/workspace-api">
+    集成 Gmail、Google Drive、Google Docs、Calendar 等 Workspace 产品，实现办公流程自动化。
+  </Card>
+  <Card title="Cloud Vision API" icon="eye" href="https://cloud.google.com/vision/docs">
+    利用机器学习模型分析图像内容，支持 OCR 文字识别、标签检测、人脸识别与安全内容过滤。
+  </Card>
+  <Card title="Vertex AI API" icon="robot" href="https://cloud.google.com/vertex-ai/docs">
+    访问 Google 云端 AI 平台，训练、部署和管理机器学习模型，并调用 Gemini 等基础模型。
+  </Card>
+  <Card title="Google Ads API" icon="bullhorn" href="https://developers.google.com/google-ads/api/docs">
+    以编程方式管理 Google 广告账户、广告系列、关键词出价及效果报告数据。
+  </Card>
+</CardGroup>
+
+---
+
+## 通用响应格式
+
+所有 Google API 均以 JSON 格式返回响应体。以下是典型的**成功响应**与**错误响应**结构示例：
+
+<CodeGroup>
+
+```json 成功响应示例
+{
+  "kind": "customsearch#search",       // 响应资源类型
+  "url": {
+    "type": "application/json",
+    "template": "https://www.googleapis.com/customsearch/v1?q=..."
+  },
+  "queries": {
+    "request": [
+      {
+        "totalResults": "1230000",     // 匹配结果总数
+        "searchTerms": "Google API",   // 原始搜索词
+        "count": 10,                   // 本次返回条数
+        "startIndex": 1                // 结果起始偏移
+      }
+    ]
+  },
+  "items": [
+    {
+      "title": "Google APIs Explorer",
+      "link": "https://developers.google.com/apis-explorer",
+      "snippet": "浏览并测试 Google 提供的所有公开 API..."
+    }
+  ]
+}
+```
+
+```json 错误响应示例
+{
+  "error": {
+    "code": 403,                        // HTTP 状态码
+    "message": "The caller does not have permission", // 错误描述
+    "status": "PERMISSION_DENIED",      // 错误类型标识
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "API_KEY_INVALID",    // 具体错误原因
+        "domain": "googleapis.com"
+      }
+    ]
+  }
+}
+```
+
+</CodeGroup>
+
+---
+
+## 错误代码参考
+
+| HTTP 状态码 | 错误类型 | 说明 |
+|---|---|---|
+| `200` | **OK** | 请求成功，响应体包含所请求的数据。 |
+| `400` | **Bad Request** | 请求参数缺失或格式不正确，请检查必填字段与数据类型。 |
+| `401` | **Unauthorized** | 未提供认证凭据，或凭据已失效，请重新获取访问令牌。 |
+| `403` | **Forbidden** | 凭据有效但权限不足，可能是 API 未启用或密钥限制所致。 |
+| `404` | **Not Found** | 请求的资源不存在，请检查端点路径与资源 ID 是否正确。 |
+| `429` | **Too Many Requests** | 请求频率超出配额限制，请降低调用频率或申请提高配额。 |
+| `500` | **Internal Server Error** | Google 服务端发生错误，通常为临时性故障，建议稍后重试。 |
+
+---
+
+## 速率限制与配额
+
+Google API 按**项目（Project）**维度管理配额，不同 API 的默认配额各有不同。了解并合理规划配额是保障应用稳定运行的关键。
+
+**查看当前配额使用情况：**
+
+1. 登录 [Google Cloud Console](https://console.cloud.google.com/)
+2. 在左侧导航栏选择 **API 和服务** > **已启用的 API 和服务**
+3. 点击目标 API，切换到 **配额和系统限额** 标签页
+4. 查看各维度的配额用量与剩余量（支持按时间段筛选）
+
+**申请提高配额：**
+
+如果您的应用需要超出默认限额的调用量，可在配额详情页点击相应配额条目旁的 **铅笔（编辑）图标**，填写业务说明后提交申请。Google 团队通常会在 2—3 个工作日内审核并回复。
+
+**最佳实践建议：**
+
+- 在客户端实现**指数退避（Exponential Backoff）**重试机制，优雅处理 `429` 错误
+- 合理使用**缓存**减少重复请求，降低配额消耗
+- 为不同环境（开发、测试、生产）创建独立项目，避免配额相互影响
+- 在 Cloud Console 配置**配额预警**，当用量超过阈值时自动发送告警通知
+
+<Note>
+  Google API 的认证配置直接影响配额计量方式。使用 API 密钥时，配额按项目统计；使用 OAuth 2.0 时，部分 API 还支持按用户维度独立计量。详情请参阅 [认证指南](/api/authentication)。
+</Note>

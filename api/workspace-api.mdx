@@ -1,0 +1,270 @@
+---
+title: "Google Workspace REST API 参考文档"
+sidebarTitle: "Workspace API"
+description: "通过 Gmail、Drive、Sheets 和 Calendar API 以编程方式管理邮件、文件、表格数据和日历事件。"
+---
+
+Google Workspace API 允许您以编程方式访问和管理用户的邮件、云端硬盘文件、电子表格数据以及日历事件。与使用 API 密钥的 Google Maps 或 Custom Search API 不同，**所有 Workspace API 均要求通过 OAuth 2.0 进行用户授权**——用户必须明确授权您的应用访问其数据，授权后您将获得访问令牌（Access Token）用于后续请求。在开始之前，请参阅 [认证与授权指南](/api/authentication) 了解 OAuth 2.0 的完整接入流程。
+
+<Note>
+  本文档中的代码示例使用 Python 和 `google-api-python-client` 库。请先安装依赖：
+  ```bash
+  pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+  ```
+</Note>
+
+---
+
+## Gmail API
+
+Gmail API 允许您读取、发送、管理邮件和标签，构建自动化邮件工作流，或将邮件数据集成到您的应用中。
+
+**Base URL：** `https://gmail.googleapis.com/gmail/v1/users/{userId}`
+
+> 其中 `{userId}` 通常使用 `me`，表示当前已授权的用户。
+
+### 核心端点
+
+| 方法 | 端点 | 说明 |
+|------|------|------|
+| `GET` | `/messages` | 列出邮件，返回邮件 ID 列表（支持过滤和分页） |
+| `GET` | `/messages/{id}` | 获取指定 ID 的完整邮件内容（含正文、附件信息） |
+| `POST` | `/messages/send` | 发送邮件，请求体为 Base64 编码的 RFC 2822 格式邮件 |
+| `DELETE` | `/messages/{id}` | 将指定邮件移至回收站（永久删除需调用 `/messages/{id}/trash`） |
+
+### Python 代码示例：列出收件箱邮件
+
+```python
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+
+# 从本地文件加载已授权的 OAuth 2.0 凭据（通过 OAuth 流程获取）
+# token.json 在首次授权后由 google-auth-oauthlib 自动生成
+creds = Credentials.from_authorized_user_file("token.json")
+
+# 构建 Gmail API 客户端
+service = build("gmail", "v1", credentials=creds)
+
+# 列出收件箱中最新的 10 封邮件
+# userId="me" 表示当前授权用户
+# labelIds=["INBOX"] 限制只查询收件箱
+result = service.users().messages().list(
+    userId="me",
+    labelIds=["INBOX"],
+    maxResults=10,        # 最多返回 10 封
+).execute()
+
+messages = result.get("messages", [])
+
+if not messages:
+    print("收件箱为空。")
+else:
+    print(f"共找到 {len(messages)} 封邮件：\n")
+    for msg_meta in messages:
+        # 根据邮件 ID 获取完整邮件内容
+        msg = service.users().messages().get(
+            userId="me",
+            id=msg_meta["id"],
+            format="metadata",          # 只获取元数据（主题、发件人等），不含正文
+            metadataHeaders=["Subject", "From", "Date"],
+        ).execute()
+
+        # 从 headers 中提取邮件主题、发件人和日期
+        headers = {h["name"]: h["value"] for h in msg["payload"]["headers"]}
+        print(f"主题：{headers.get('Subject', '(无主题)')}")
+        print(f"发件人：{headers.get('From', '未知')}")
+        print(f"日期：{headers.get('Date', '未知')}")
+        print("---")
+```
+
+### 所需 OAuth 权限范围
+
+| 权限范围 | 说明 |
+|----------|------|
+| `https://www.googleapis.com/auth/gmail.readonly` | 只读访问邮件和标签（推荐用于仅需读取的场景） |
+| `https://www.googleapis.com/auth/gmail.modify` | 读写权限，可修改标签、删除邮件，但不能发送邮件 |
+| `https://www.googleapis.com/auth/gmail.send` | 仅允许发送邮件 |
+| `https://mail.google.com/` | 完整访问权限（包括永久删除，谨慎申请） |
+
+<Warning>
+  申请权限范围时应遵循**最小权限原则**：只申请您的应用实际需要的权限范围。权限范围越广，通过 Google 应用审核的难度越大，用户授权的意愿也越低。
+</Warning>
+
+---
+
+## Google Drive API
+
+Google Drive API 允许您列出、搜索、上传、下载和管理用户云端硬盘中的文件，支持 Google 原生格式（Docs、Sheets、Slides）和第三方文件格式。
+
+**Base URL：** `https://www.googleapis.com/drive/v3`
+
+### 核心端点
+
+| 方法 | 端点 | 说明 |
+|------|------|------|
+| `GET` | `/files` | 列出文件，支持 `q` 参数按名称、类型、修改时间等条件过滤 |
+| `GET` | `/files/{fileId}` | 获取指定文件的元数据（名称、类型、大小、修改时间等） |
+| `POST` | `/files` | 上传文件（元数据创建），结合 multipart 请求可同时上传文件内容 |
+| `DELETE` | `/files/{fileId}` | 将文件移至回收站（不可恢复的永久删除需使用 `?supportsAllDrives=true`） |
+
+### Python 代码示例：列出云端硬盘文件
+
+```python
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+
+# 加载已授权的 OAuth 2.0 凭据
+creds = Credentials.from_authorized_user_file("token.json")
+
+# 构建 Drive API v3 客户端
+service = build("drive", "v3", credentials=creds)
+
+# 列出云端硬盘中最近修改的 20 个文件
+# fields 参数指定返回的字段，按需精简以提升性能
+result = service.files().list(
+    pageSize=20,                                    # 每页返回文件数量
+    orderBy="modifiedTime desc",                    # 按修改时间降序排列
+    fields="files(id, name, mimeType, modifiedTime, size)",  # 只返回必要字段
+).execute()
+
+files = result.get("files", [])
+
+if not files:
+    print("云端硬盘中没有找到文件。")
+else:
+    print(f"最近修改的 {len(files)} 个文件：\n")
+    for file in files:
+        # 格式化输出每个文件的基本信息
+        file_size = file.get("size", "N/A")          # Google 原生格式文件无 size 字段
+        print(f"文件名：{file['name']}")
+        print(f"文件 ID：{file['id']}")
+        print(f"类型：{file['mimeType']}")
+        print(f"修改时间：{file['modifiedTime']}")
+        print(f"大小：{file_size} 字节")
+        print("---")
+```
+
+<Tip>
+  使用 `q` 参数可以对文件列表进行过滤。例如：
+  - `q="mimeType='application/vnd.google-apps.spreadsheet'"` — 只列出 Google 表格
+  - `q="name contains '报告'"` — 列出名称包含"报告"的文件
+  - `q="modifiedTime > '2024-01-01T00:00:00'"` — 列出 2024 年后修改的文件
+</Tip>
+
+### 所需 OAuth 权限范围
+
+| 权限范围 | 说明 |
+|----------|------|
+| `https://www.googleapis.com/auth/drive` | 完整的云端硬盘访问权限 |
+| `https://www.googleapis.com/auth/drive.readonly` | 只读访问，可列出和下载文件 |
+| `https://www.googleapis.com/auth/drive.file` | 仅访问由本应用创建或打开的文件 |
+| `https://www.googleapis.com/auth/drive.metadata.readonly` | 仅读取文件元数据，不含文件内容 |
+
+---
+
+## Google Sheets API
+
+Google Sheets API 允许您以编程方式读取和写入电子表格中的数据，非常适合构建数据管道、报表自动化和与 Google 表格的深度集成场景。
+
+**Base URL：** `https://sheets.googleapis.com/v4/spreadsheets`
+
+### Python 代码示例：读取表格数据
+
+```python
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+
+# 加载已授权的 OAuth 2.0 凭据
+creds = Credentials.from_authorized_user_file("token.json")
+
+# 构建 Sheets API v4 客户端
+service = build("sheets", "v4", credentials=creds)
+
+# 目标电子表格的 ID（从表格 URL 中获取）
+# 例如 URL：https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit
+SPREADSHEET_ID = "YOUR_SPREADSHEET_ID"
+
+# 要读取的单元格范围（A1 表示法）
+# "Sheet1!A1:C10" 表示第一个工作表的 A1 到 C10 区域
+RANGE = "Sheet1!A1:C10"
+
+# 调用 spreadsheets.values.get 方法读取指定范围的数据
+result = service.spreadsheets().values().get(
+    spreadsheetId=SPREADSHEET_ID,
+    range=RANGE,
+    valueRenderOption="FORMATTED_VALUE",   # 返回格式化后的显示值（如日期、货币格式）
+    dateTimeRenderOption="FORMATTED_STRING",  # 日期时间以字符串格式返回
+).execute()
+
+# values 是一个二维列表，每个子列表代表一行数据
+rows = result.get("values", [])
+
+if not rows:
+    print("指定范围内没有数据。")
+else:
+    print(f"共读取 {len(rows)} 行数据：\n")
+    for row_index, row in enumerate(rows):
+        # 输出每行数据（列之间用制表符分隔）
+        print(f"第 {row_index + 1} 行：{row}")
+```
+
+### 写入数据示例
+
+```python
+# 向表格写入数据（覆盖模式）
+write_range = "Sheet1!A1:C3"
+
+# 要写入的数据（二维列表，每个子列表为一行）
+write_values = [
+    ["姓名", "部门", "入职日期"],     # 表头行
+    ["张三", "工程部", "2024-01-15"], # 数据行 1
+    ["李四", "市场部", "2024-03-20"], # 数据行 2
+]
+
+body = {
+    "values": write_values
+}
+
+# 调用 spreadsheets.values.update 方法写入数据
+service.spreadsheets().values().update(
+    spreadsheetId=SPREADSHEET_ID,
+    range=write_range,
+    valueInputOption="USER_ENTERED",  # USER_ENTERED：按用户输入解析（如日期格式）
+    body=body,
+).execute()
+
+print("数据写入成功！")
+```
+
+### 所需 OAuth 权限范围
+
+| 权限范围 | 说明 |
+|----------|------|
+| `https://www.googleapis.com/auth/spreadsheets` | 完整读写访问所有电子表格 |
+| `https://www.googleapis.com/auth/spreadsheets.readonly` | 只读访问电子表格内容 |
+| `https://www.googleapis.com/auth/drive` | 通过 Drive API 访问表格（包含文件管理权限） |
+
+---
+
+## 重要说明
+
+<Note>
+  **所有 Google Workspace API 均需要 OAuth 2.0 授权。** API 密钥不适用于访问用户私有数据。您必须引导用户完成 OAuth 授权流程，获取 Access Token 后才能调用这些 API。
+
+  详细的 OAuth 2.0 接入步骤，包括应用注册、授权流程、令牌刷新和安全最佳实践，请参阅 [认证与授权指南](/api/authentication)。
+</Note>
+
+<Steps>
+  <Step title="在 Cloud Console 中创建 OAuth 客户端">
+    前往 [Google Cloud Console](https://console.cloud.google.com/) → 凭据 → 创建凭据 → OAuth 客户端 ID。根据您的应用类型选择"Web 应用"、"桌面应用"或"Android/iOS"，并下载 `client_secret.json` 文件。
+  </Step>
+  <Step title="选择并配置权限范围">
+    在 Cloud Console 的"OAuth 同意屏幕"中添加您需要的权限范围（Scopes）。涉及敏感权限（如 Gmail、Drive 完整访问）的应用可能需要通过 Google 的应用审核。
+  </Step>
+  <Step title="完成用户授权流程">
+    在应用中使用 `google-auth-oauthlib` 等库引导用户完成授权，获取并安全存储 `token.json`（包含 Access Token 和 Refresh Token）。
+  </Step>
+  <Step title="使用 Access Token 调用 API">
+    使用存储的凭据构建 API 客户端，发起 API 调用。当 Access Token 过期（通常 1 小时后），库会自动使用 Refresh Token 获取新的 Access Token。
+  </Step>
+</Steps>

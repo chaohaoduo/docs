@@ -1,17 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "projectType": "saas",
+  "projectName": "Google",
+  "projectDescription": "A comprehensive suite of cloud-based products and services designed to help individuals and businesses search, communicate, collaborate, and innovate.",
   "theme": "almond",
-  "name": "Google",
-  "colors": {
-    "primary": "#ef7025",
-    "light": "#eec9bc",
-    "dark": "#4fa1ab"
-  },
-  "favicon": "/favicon.svg",
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
+  "primaryColor": "#ef7025",
+  "lightColor": "#eec9bc",
+  "darkColor": "#4fa1ab",
   "navigation": {
     "tabs": [
       {
@@ -76,24 +70,24 @@
       }
     ]
   },
-  "navbar": {
-    "links": [
-      {
-        "label": "支持",
-        "href": "mailto:support@google.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "控制台",
-      "href": "https://console.cloud.google.com"
-    }
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/google",
-      "github": "https://github.com/google",
-      "linkedin": "https://linkedin.com/company/google"
-    }
-  }
+  "keyFeatures": [
+    "智能搜索引擎",
+    "Google Workspace 协作套件",
+    "Google Cloud 云计算平台",
+    "Google Maps 地图服务",
+    "Google Ads 广告平台",
+    "AI 与机器学习能力",
+    "企业级安全与合规",
+    "丰富的 API 与集成生态"
+  ],
+  "publicApiSurface": [
+    "Custom Search JSON API",
+    "Maps JavaScript API",
+    "Geocoding API",
+    "Gmail API",
+    "Google Drive API",
+    "Google Sheets API",
+    "Google Ads API",
+    "Cloud Vision API"
+  ]
 }

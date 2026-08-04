@@ -1,0 +1,290 @@
+---
+title: "Custom Search JSON API 参考文档"
+sidebarTitle: "搜索 API"
+description: "Custom Search JSON API 允许您将 Google 搜索功能嵌入应用，支持网页、图片搜索，返回 JSON 格式结果。"
+---
+
+Custom Search JSON API 允许开发者将 Google 搜索功能直接嵌入到自己的应用程序、网站或工作流中。无论您需要构建站内搜索引擎、内容聚合工具，还是需要以编程方式获取搜索结果，该 API 都能以标准 JSON 格式返回网页或图片搜索结果，方便您在任何平台上进行解析与展示。
+
+---
+
+## 基础信息
+
+| 项目 | 详情 |
+|------|------|
+| **Base URL** | `https://www.googleapis.com/customsearch/v1` |
+| **认证方式** | API 密钥（`key` 查询参数） |
+| **响应格式** | JSON |
+| **请求方式** | `GET` |
+
+<Note>
+  使用前，请先在 [Google Cloud Console](https://console.cloud.google.com/) 中启用 **Custom Search API**，并在 [可编程搜索引擎控制台](https://programmablesearchengine.google.com/) 中创建搜索引擎以获取 `cx`（搜索引擎 ID）。
+</Note>
+
+---
+
+## 请求参数
+
+### 必需参数
+
+<ParamField query="key" type="string" required>
+  您的 Google API 密钥。请前往 Google Cloud Console 创建并管理您的密钥。建议对密钥设置 HTTP 引用来源或 IP 限制，以防止未授权使用。
+</ParamField>
+
+<ParamField query="cx" type="string" required>
+  可编程搜索引擎 ID（Custom Search Engine ID）。每个搜索引擎对应一个唯一的 `cx` 值，可在搜索引擎控制台的"基本信息"页面中找到。
+</ParamField>
+
+<ParamField query="q" type="string" required>
+  搜索查询字符串。支持 Google 搜索运算符，例如 `site:`、`filetype:`、引号精确匹配等。查询字符串会自动进行 URL 编码。
+</ParamField>
+
+### 可选参数
+
+<ParamField query="num" type="integer" default="10">
+  每次请求返回的搜索结果数量。有效范围为 **1 到 10**，默认值为 `10`。若需获取更多结果，请结合 `start` 参数进行分页。
+</ParamField>
+
+<ParamField query="start" type="integer" default="1">
+  分页起始索引。指定从第几条结果开始返回，默认为 `1`。例如，第二页可将 `start` 设为 `11`（配合 `num=10`）。最大支持索引为 `91`。
+</ParamField>
+
+<ParamField query="lr" type="string">
+  语言限制。将搜索结果限制为特定语言的网页。常用值：
+  - `lang_zh-CN`：简体中文
+  - `lang_zh-TW`：繁体中文
+  - `lang_en`：英语
+  - `lang_ja`：日语
+</ParamField>
+
+<ParamField query="safe" type="string" default="off">
+  安全搜索过滤级别。可选值：
+  - `active`：开启安全搜索，过滤成人内容
+  - `off`：关闭安全搜索过滤（默认）
+</ParamField>
+
+<ParamField query="searchType" type="string">
+  搜索类型。设置为 `image` 时将执行图片搜索，返回图片结果列表。如果不指定此参数，则默认执行网页搜索。
+</ParamField>
+
+---
+
+## 请求示例
+
+<CodeGroup>
+
+```bash cURL
+# 搜索"人工智能"相关的简体中文网页，返回前5条结果
+curl -X GET "https://www.googleapis.com/customsearch/v1" \
+  -G \
+  --data-urlencode "key=YOUR_API_KEY" \
+  --data-urlencode "cx=YOUR_SEARCH_ENGINE_ID" \
+  --data-urlencode "q=人工智能" \
+  --data-urlencode "lr=lang_zh-CN" \
+  --data-urlencode "num=5"
+```
+
+```python Python (requests)
+import requests
+
+# 配置请求参数
+params = {
+    "key": "YOUR_API_KEY",          # 替换为您的 API 密钥
+    "cx": "YOUR_SEARCH_ENGINE_ID",  # 替换为您的搜索引擎 ID
+    "q": "人工智能",                 # 搜索关键词
+    "lr": "lang_zh-CN",             # 限制为简体中文结果
+    "num": 5,                        # 返回 5 条结果
+    "safe": "active",               # 开启安全搜索
+}
+
+# 发送 GET 请求
+response = requests.get(
+    "https://www.googleapis.com/customsearch/v1",
+    params=params
+)
+
+# 检查响应状态
+response.raise_for_status()
+data = response.json()
+
+# 遍历搜索结果
+for item in data.get("items", []):
+    print(f"标题：{item['title']}")
+    print(f"链接：{item['link']}")
+    print(f"摘要：{item['snippet']}")
+    print("---")
+```
+
+```javascript JavaScript (fetch)
+// 配置请求参数
+const params = new URLSearchParams({
+  key: "YOUR_API_KEY",           // 替换为您的 API 密钥
+  cx: "YOUR_SEARCH_ENGINE_ID",   // 替换为您的搜索引擎 ID
+  q: "人工智能",                  // 搜索关键词
+  lr: "lang_zh-CN",              // 限制为简体中文结果
+  num: "5",                       // 返回 5 条结果
+});
+
+const url = `https://www.googleapis.com/customsearch/v1?${params}`;
+
+// 发送请求并处理响应
+fetch(url)
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error(`请求失败：${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  })
+  .then((data) => {
+    // 遍历并输出搜索结果
+    data.items?.forEach((item) => {
+      console.log("标题：", item.title);
+      console.log("链接：", item.link);
+      console.log("摘要：", item.snippet);
+      console.log("---");
+    });
+  })
+  .catch((error) => {
+    console.error("搜索请求出错：", error);
+  });
+```
+
+</CodeGroup>
+
+---
+
+## 响应示例
+
+```json
+{
+  "kind": "customsearch#search",
+  "url": {
+    "type": "application/json",
+    "template": "https://www.googleapis.com/customsearch/v1?q={searchTerms}&..."
+  },
+  "queries": {
+    "request": [
+      {
+        "title": "Google Custom Search - 人工智能",
+        "searchTerms": "人工智能",
+        "count": 5,
+        "startIndex": 1,
+        "language": "lang_zh-CN",
+        "safe": "active",
+        "cx": "YOUR_SEARCH_ENGINE_ID"
+      }
+    ],
+    "nextPage": [
+      {
+        "title": "Google Custom Search - 人工智能",
+        "searchTerms": "人工智能",
+        "count": 5,
+        "startIndex": 6
+      }
+    ]
+  },
+  "searchInformation": {
+    "searchTime": 0.312,
+    "formattedSearchTime": "0.31",
+    "totalResults": "2430000000",
+    "formattedTotalResults": "2,430,000,000"
+  },
+  "items": [
+    {
+      "kind": "customsearch#result",
+      "title": "人工智能 - 维基百科",
+      "htmlTitle": "<b>人工智能</b> - 维基百科",
+      "link": "https://zh.wikipedia.org/wiki/人工智能",
+      "displayLink": "zh.wikipedia.org",
+      "snippet": "人工智能（英語：Artificial Intelligence，缩写为AI），是指由人制造出来的机器所表现出来的智能。通常人工智能是指通过普通计算机程序来呈现人类智能的技术。",
+      "pagemap": {
+        "metatags": [
+          {
+            "og:title": "人工智能 - 维基百科",
+            "og:description": "人工智能的概念与发展历史..."
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+---
+
+## 响应字段说明
+
+<ResponseField name="kind" type="string">
+  响应类型标识符，固定值为 `customsearch#search`。
+</ResponseField>
+
+<ResponseField name="url" type="object">
+  描述 API 请求模板的对象，包含 `type`（媒体类型）和 `template`（URI 模板）字段。
+</ResponseField>
+
+<ResponseField name="queries" type="object">
+  包含查询元数据的对象。
+
+  <Expandable title="queries 子字段">
+    <ResponseField name="queries.request" type="array">
+      当前请求的查询信息数组，通常只包含一个元素。包含 `searchTerms`（查询词）、`count`（请求数量）、`startIndex`（起始索引）等字段。
+    </ResponseField>
+    <ResponseField name="queries.nextPage" type="array">
+      下一页的查询参数，可用于构造分页请求。如果没有更多结果，此字段不存在。
+    </ResponseField>
+    <ResponseField name="queries.previousPage" type="array">
+      上一页的查询参数。仅当 `start > 1` 时存在。
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="searchInformation" type="object">
+  搜索统计信息，包含 `searchTime`（搜索耗时，单位秒）、`totalResults`（估计总结果数）等字段。
+</ResponseField>
+
+<ResponseField name="items" type="array">
+  搜索结果列表。每条结果包含以下字段：
+
+  <Expandable title="items 子字段">
+    <ResponseField name="items[].title" type="string">
+      结果页面的纯文本标题。
+    </ResponseField>
+    <ResponseField name="items[].htmlTitle" type="string">
+      结果页面的 HTML 格式标题，查询词会被 `<b>` 标签高亮。
+    </ResponseField>
+    <ResponseField name="items[].link" type="string">
+      结果页面的完整 URL 地址。
+    </ResponseField>
+    <ResponseField name="items[].displayLink" type="string">
+      结果页面的显示域名（不含协议前缀），例如 `zh.wikipedia.org`。
+    </ResponseField>
+    <ResponseField name="items[].snippet" type="string">
+      结果页面的文字摘要，通常为 160 个字符以内的纯文本描述。
+    </ResponseField>
+    <ResponseField name="items[].pagemap" type="object">
+      页面的结构化数据，可能包含 Open Graph 标签、Schema.org 数据、缩略图等信息（具体内容因页面而异）。
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## 错误处理
+
+以下是使用 Custom Search JSON API 时常见的错误及解决方案：
+
+| HTTP 状态码 | 错误代码 | 原因 | 解决方案 |
+|------------|----------|------|----------|
+| `400` | `keyInvalid` | API 密钥无效或格式错误 | 检查 `key` 参数是否完整、正确，并确认该密钥已在 Cloud Console 中启用 Custom Search API |
+| `403` | `dailyLimitExceeded` | 已超出每日免费配额（100 次/天） | 在 Cloud Console 中升级配额，或等待次日配额重置 |
+| `403` | `userRateLimitExceeded` | 短时间内请求频率过高 | 实施指数退避重试策略（Exponential Backoff），降低请求频率 |
+| `400` | `invalid` | 请求参数值不合法（如 `num > 10`） | 检查所有参数是否在有效范围内 |
+| `404` | `notFound` | 搜索引擎 ID（`cx`）不存在 | 确认 `cx` 值正确，并在搜索引擎控制台中验证该引擎是否存在 |
+
+<Warning>
+  Custom Search JSON API 每天仅提供 **100 次免费查询**。超出后，每 1000 次额外查询收费 $5 美元，每天最多可购买 10,000 次额外查询。请合理缓存搜索结果以降低成本。
+</Warning>
+
+<Tip>
+  建议在生产环境中为 API 密钥设置 **HTTP 引用来源限制**（对于 Web 应用）或 **IP 地址限制**（对于服务器应用），以防止密钥泄露导致配额被滥用。
+</Tip>

@@ -1,0 +1,97 @@
+---
+title: "Google Cloud：全球企业级云计算平台"
+sidebarTitle: "Cloud"
+description: "Google Cloud 提供计算、存储、数据库、网络、AI/ML 及安全等完整云服务，支撑全球数百万企业应用。"
+---
+
+Google Cloud 是 Google 面向全球企业提供的综合性云计算平台，依托覆盖全球 **35 个以上地区、100 余个可用区**的超大规模基础设施，为您的业务提供高可用、低延迟的云服务。Google Cloud 在 AI 与机器学习、大数据分析和网络安全三大领域具备显著差异化优势——Vertex AI 平台集成了 Gemini 等前沿大模型，BigQuery 重新定义了 PB 级数据分析的速度与成本，而 Google 自研的 Titan 安全芯片与 BeyondCorp 零信任架构则为您的数据和工作负载提供从芯片到应用的全栈安全保障。无论您是初创企业还是跨国集团，Google Cloud 都能提供灵活弹性的按需付费服务，支撑您的数字化转型之旅。
+
+---
+
+## 核心服务类别
+
+<CardGroup cols={2}>
+  <Card title="计算服务" icon="server">
+    **Compute Engine**：高性能可定制虚拟机，支持多种机型与操作系统，满足通用计算、内存密集型与 GPU 加速等多样化需求。  
+    **Google Kubernetes Engine (GKE)**：全托管 Kubernetes 服务，简化容器化应用的部署、扩缩容与运维管理。  
+    **Cloud Run**：无服务器容器运行平台，按实际请求计费，自动扩缩容至零，让您专注业务逻辑而非基础设施。
+  </Card>
+  <Card title="存储与数据库" icon="database">
+    **Cloud Storage**：全球统一的对象存储服务，提供标准、近线、冷线与归档四种存储类别，满足不同成本与访问频率需求。  
+    **BigQuery**：全托管无服务器数据仓库，支持对 PB 级数据进行秒级 SQL 查询，内置 ML 能力与 BI 引擎。  
+    **Cloud SQL**：全托管关系型数据库服务，支持 MySQL、PostgreSQL 与 SQL Server，自动备份与故障转移。
+  </Card>
+  <Card title="AI 与机器学习" icon="brain">
+    **Vertex AI**：统一的 AI 开发平台，提供从数据准备、模型训练、部署到监控的端到端 MLOps 流程，并提供 Gemini 等预训练模型 API。  
+    **Cloud Vision API**：强大的图像分析服务，支持物体检测、OCR 文字识别、人脸检测与内容审核。  
+    **Natural Language API**：自然语言处理服务，提供情感分析、实体识别、语法分析与内容分类能力。
+  </Card>
+  <Card title="网络服务" icon="network-wired">
+    **Cloud CDN**：基于 Google 全球边缘节点的内容分发网络，将静态与动态内容缓存至距用户最近的节点，大幅降低延迟。  
+    **Cloud Load Balancing**：全球负载均衡服务，支持 HTTP(S)、TCP、UDP 流量分发，自动应对流量峰值。  
+    **Virtual Private Cloud (VPC)**：软件定义的私有云网络，支持全球单一 VPC 架构与灵活的子网、路由与防火墙配置。
+  </Card>
+  <Card title="安全" icon="shield-halved">
+    **Cloud IAM**：精细化身份与访问管理，基于最小权限原则控制谁可以对哪些资源执行哪些操作。  
+    **Cloud Armor**：DDoS 防护与 Web 应用防火墙（WAF）服务，保护您的应用免受大规模网络攻击与 OWASP Top 10 漏洞威胁。  
+    **Secret Manager**：安全存储和管理 API 密钥、密码、证书等敏感配置信息，支持版本管理与自动轮换。
+  </Card>
+  <Card title="开发者工具" icon="code">
+    **Cloud Build**：全托管 CI/CD 平台，支持从源代码到容器镜像的自动化构建、测试与部署流水线。  
+    **Artifact Registry**：统一的制品管理仓库，支持 Docker 镜像、Maven、npm、Python 等多种包格式的存储与分发。  
+    **Cloud Code**：适用于 VS Code 与 JetBrains IDE 的插件，提供 Kubernetes 与 Cloud Run 应用的本地开发、调试与部署支持。
+  </Card>
+</CardGroup>
+
+---
+
+## 快速部署示例
+
+以下示例演示如何使用 `gcloud` CLI 将一个容器镜像快速部署到 Cloud Run，整个过程仅需数分钟：
+
+```bash
+# 第一步：配置默认项目与地区（将 YOUR_PROJECT_ID 替换为您的项目 ID）
+gcloud config set project YOUR_PROJECT_ID
+gcloud config set run/region asia-east1  # 使用台湾地区节点，亦可选择 asia-northeast1（东京）
+
+# 第二步：构建容器镜像并推送至 Artifact Registry
+gcloud builds submit --tag asia-east1-docker.pkg.dev/YOUR_PROJECT_ID/my-repo/my-app:v1
+
+# 第三步：将容器镜像部署到 Cloud Run
+gcloud run deploy my-app \
+  --image asia-east1-docker.pkg.dev/YOUR_PROJECT_ID/my-repo/my-app:v1 \
+  --platform managed \       # 使用全托管模式，无需管理服务器
+  --allow-unauthenticated \  # 允许公开访问（如需鉴权请移除此参数）
+  --memory 512Mi \           # 分配 512 MB 内存
+  --concurrency 80           # 每个容器实例最多处理 80 个并发请求
+
+# 部署成功后，命令行将输出服务的公网访问 URL
+# 示例：https://my-app-xxxxxxxxxx-de.a.run.app
+```
+
+<Note>
+首次使用前，请确保已在项目中启用 Cloud Run API 与 Cloud Build API。您可以在 [Cloud Console](https://console.cloud.google.com) 的 **API 和服务** 页面中一键启用所需 API。
+</Note>
+
+---
+
+## 免费套餐
+
+Google Cloud 提供**永久免费套餐（Always Free）**，让您可以长期免费使用以下核心产品，无需担心意外扣费：
+
+| 产品 | 每月免费额度 | 说明 |
+|------|------------|------|
+| **Compute Engine** | 1 个 e2-micro 实例 | 限美国地区（爱荷华、俄勒冈、南卡罗来纳），含 30 GB 标准永久磁盘 |
+| **Cloud Storage** | 5 GB 标准存储 | 含每月 1 GB 出站流量（流向北美地区） |
+| **BigQuery** | 每月 10 GB 存储 + 1 TB 查询 | 超出部分按用量计费，适合数据分析入门 |
+| **Cloud Run** | 每月 200 万次请求 | 含 360,000 GB 秒内存与 180,000 vCPU 秒计算时间 |
+| **Cloud Functions** | 每月 200 万次调用 | 含 400,000 GB 秒内存与 200,000 GHz 秒计算时间 |
+| **Pub/Sub** | 每月 10 GB 消息 | 适合构建事件驱动架构与消息队列 |
+| **Cloud Firestore** | 1 GB 存储 + 每日 5 万次读写 | 全托管 NoSQL 文档数据库，适合移动与 Web 应用 |
+| **Artifact Registry** | 每月 0.5 GB 存储 | 存储容器镜像与软件包 |
+
+<Warning>
+免费套餐额度适用于单个 Google Cloud 账号，部分产品的免费额度有地区限制。超出免费额度的用量将按标准费率计费。建议您在 Cloud Console 中设置**预算提醒**，以便在支出接近阈值时及时收到通知，避免意外费用。
+</Warning>
+
+新用户注册 Google Cloud 还可获得价值 **$300 美元的免费赠金**，有效期 90 天，可用于体验任何 Google Cloud 产品。立即前往 [Cloud Console](https://console.cloud.google.com) 开启您的云计算之旅。

@@ -1,0 +1,83 @@
+---
+title: "Google 企业级安全与数据保护机制"
+sidebarTitle: "安全"
+description: "Google 通过端到端加密、零信任架构、合规认证与威胁检测，为企业数据和 API 密钥提供多层次保障。"
+---
+
+Google 将安全视为产品设计的第一优先级，而非事后补充的功能层。Google 的企业安全体系以 **BeyondCorp** 零信任架构为核心——这一由 Google 内部实践发展而来的安全模型彻底摒弃了"内网可信、外网不可信"的传统假设，转而要求每一次访问请求都必须经过身份验证、设备状态检查与权限评估，无论请求来自企业内网还是公共网络。这一理念确保了即便攻击者突破网络边界，也无法在系统内横向移动。Google 为企业客户提供的每一项安全能力，均源自其保护自身全球基础设施的实战经验。
+
+## 数据保护
+
+<CardGroup cols={2}>
+  <Card title="传输加密（TLS 1.3）" icon="shield">
+    所有在用户设备与 Google 服务器之间传输的数据，均使用 **TLS 1.3** 协议进行加密，防止中间人攻击与流量窃听。Google 还实施了 HTTP Strict Transport Security（HSTS），强制所有连接使用加密通道。
+  </Card>
+  <Card title="存储加密（AES-256）" icon="lock">
+    静态数据在 Google 存储基础设施中使用 **AES-256** 标准进行加密，每个数据块均有独立的加密密钥，密钥本身由主密钥二次加密，形成多层密钥保护体系。
+  </Card>
+  <Card title="客户管理密钥（CMEK）" icon="key">
+    企业客户可通过 **客户管理加密密钥（CMEK）** 使用自己在 Cloud KMS 中管理的密钥加密 Google Cloud 数据，实现对数据加密生命周期的完全自主控制，满足数据主权合规要求。
+  </Card>
+  <Card title="数据丢失防护（DLP）" icon="eye">
+    **Cloud DLP** 可自动扫描、识别并保护敏感信息（如身份证号、信用卡号、医疗数据），支持在数据存储、传输和使用过程中触发自动脱敏、告警或阻断操作，防止敏感数据意外泄露。
+  </Card>
+</CardGroup>
+
+## 身份与访问管理
+
+<Steps>
+  <Step title="为账号启用双因素认证（2FA）">
+    登录 [Google 账号安全设置](https://myaccount.google.com/security)，在「两步验证」部分选择适合您的第二因素方式：推荐使用**安全密钥**（硬件 FIDO2 设备）或 **Google Authenticator** 动态验证码。2FA 可有效防止密码泄露后的账号接管攻击，对于拥有管理员权限的账号，此项为强制要求。
+  </Step>
+  <Step title="使用服务账号进行 API 访问">
+    在 Google Cloud Console 中为每个应用或服务创建专用的**服务账号（Service Account）**，并为其颁发 JSON 密钥或使用 Workload Identity Federation 进行无密钥认证。服务账号提供了明确的身份归属，使审计日志能够精确追踪每一次 API 调用的来源，避免多个服务共用同一凭证导致的权限蔓延风险。
+  </Step>
+  <Step title="遵循最小权限原则配置 IAM 角色">
+    在 Google Cloud IAM 中，为每个服务账号或用户仅授予其完成工作**所必需的最小权限集合**。优先使用 Google 提供的预定义角色（如 `roles/storage.objectViewer`），避免使用 `roles/owner` 或 `roles/editor` 等宽泛角色。定期通过 IAM Recommender 审查并收回多余权限，减少潜在的攻击面。
+  </Step>
+  <Step title="定期轮换 API 密钥">
+    制定并执行 API 密钥的**定期轮换策略**（建议每 90 天轮换一次），在 Cloud Console 中停用旧密钥前，确保所有服务已切换至新密钥。对于高敏感度系统，可考虑使用 Workload Identity Federation 完全消除对长期密钥的依赖，进一步降低凭证泄露风险。
+  </Step>
+</Steps>
+
+## API 密钥安全最佳实践
+
+保护 API 密钥是防止未授权访问和意外费用的关键环节，请遵循以下最佳实践：
+
+- **限制密钥的使用来源**：在 Cloud Console 中为 API 密钥设置 IP 地址限制（仅允许您的服务器 IP）或 HTTP 来源限制（仅允许您的域名），防止密钥被他人盗用
+- **启用 API 限制**：在密钥配置中指定该密钥仅可调用特定的 API（例如仅允许 Maps API），即使密钥泄露，攻击者也无法调用其他服务
+- **绝不将密钥提交至版本控制系统**：在 `.gitignore` 中排除所有包含密钥的配置文件，并为 Git 仓库配置预提交钩子（pre-commit hook）自动扫描敏感字符串
+- **在生产环境使用 Secret Manager**：通过 [Google Cloud Secret Manager](https://cloud.google.com/secret-manager) 集中管理所有密钥与敏感配置，应用程序在运行时动态获取，而非从环境变量或配置文件中读取
+
+以下是一个推荐的环境变量配置示例：
+
+```bash
+# .env.example — 仅保存此模板文件至版本控制，不保存实际密钥
+
+# Google Cloud 项目 ID
+GOOGLE_CLOUD_PROJECT_ID=your-project-id
+
+# Gemini API 密钥（从 Cloud Console 获取）
+GEMINI_API_KEY=your-api-key-here
+
+# Google Maps API 密钥（限制为仅允许 Maps JavaScript API）
+MAPS_API_KEY=your-maps-api-key-here
+
+# 服务账号密钥文件路径（生产环境建议改用 Workload Identity）
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+```
+
+<Warning>
+  **严禁将 API 密钥、服务账号 JSON 文件或任何敏感凭证硬编码在源代码中。** 即便是私有仓库，一旦代码泄露或仓库权限配置错误，密钥将面临直接暴露风险。请始终通过环境变量或 Secret Manager 在运行时注入凭证，并将包含实际密钥的 `.env` 文件添加至 `.gitignore`。
+</Warning>
+
+## 合规认证
+
+Google 的产品与服务通过了业界主流的安全与隐私合规认证，帮助您满足行业监管要求：
+
+| 认证/标准 | 适用产品 |
+|----------|---------|
+| ISO 27001 | 全线产品（包括 Google Workspace、Google Cloud 及核心消费者服务），涵盖信息安全管理体系的国际标准认证 |
+| SOC 2 Type II | Google Cloud 平台，由独立第三方审计机构验证安全性、可用性、处理完整性、保密性与隐私控制的持续有效性 |
+| GDPR | 全线产品，Google 为欧盟及欧洲经济区用户提供完整的数据处理协议（DPA），支持数据访问、删除与可携带性等数据主体权利 |
+| HIPAA | Google Cloud（需签署业务伙伴协议 BAA），支持医疗健康客户在 Google Cloud 上处理受保护的健康信息（PHI），满足美国 HIPAA 合规要求 |

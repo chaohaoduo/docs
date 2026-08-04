@@ -1,0 +1,95 @@
+---
+title: "Google AI 能力：Gemini 驱动的智能功能全解析"
+sidebarTitle: "AI 能力"
+description: "了解 Google 如何将 Gemini 模型融入搜索、Workspace、Cloud 和 Maps 产品，提供智能助手、代码生成与内容理解等能力。"
+---
+
+Google 正在将人工智能能力全面融入其产品矩阵，以 **Gemini** 系列模型为基础，驱动从消费者搜索到企业级云服务的每一个智能环节。无论您是个人用户、开发者还是企业客户，Gemini 都能为您提供更智能的搜索摘要、更流畅的写作辅助、更高效的代码生成以及更精准的内容理解体验。Google 的 AI 战略以"普惠、负责任、开放"为核心，致力于让每一位用户都能从前沿 AI 技术中受益。
+
+## Gemini 模型系列
+
+<CardGroup cols={3}>
+  <Card title="Gemini Ultra" icon="sparkles">
+    Google 迄今为止能力最强的模型，专为处理高度复杂的任务而设计，包括多模态推理、长文本理解与高难度代码生成。适用于需要最高精度的企业级场景。
+  </Card>
+  <Card title="Gemini Pro" icon="bolt">
+    性能与效率兼顾的均衡型模型，覆盖绝大多数日常与商业应用场景，包括内容创作、问答、摘要生成等。是大多数开发者和企业的首选。
+  </Card>
+  <Card title="Gemini Nano" icon="microchip">
+    专为设备端推理优化的轻量级模型，可在手机等终端设备上本地运行，保护用户隐私的同时实现低延迟响应。已集成于 Pixel 系列设备。
+  </Card>
+</CardGroup>
+
+## 各产品中的 AI 应用
+
+以下表格概述了 Gemini 在 Google 主要产品线中的落地应用：
+
+| 产品 | AI 功能 | 说明 |
+|------|---------|------|
+| 搜索 | AI Overviews | 对复杂查询自动生成智能摘要，帮助您快速获取关键信息，减少浏览多个网页的时间 |
+| Workspace | Gemini in Workspace | 在 Gmail、Docs、Sheets 和 Slides 中提供写作建议、内容生成与代码辅助能力 |
+| Cloud | Vertex AI | 企业级模型训练、微调与部署平台，支持 Gemini API 与自定义模型的全生命周期管理 |
+| Maps | 智能路线规划 | 结合实时路况、历史数据与 AI 预测，为您推荐最优出行路线并提前预警拥堵 |
+
+## Cloud Vision API 示例
+
+您可以通过 Cloud Vision API 快速实现图片内容理解，以下示例演示如何调用图像标注接口：
+
+```bash
+# 调用 Cloud Vision API 对图像进行多维度分析
+curl -X POST \
+  "https://vision.googleapis.com/v1/images:annotate?key=YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "requests": [
+      {
+        "image": {
+          "source": {
+            # 替换为您的公开图片 URL
+            "imageUri": "https://example.com/sample-image.jpg"
+          }
+        },
+        "features": [
+          {
+            # 标签检测：识别图片中的物体与场景
+            "type": "LABEL_DETECTION",
+            "maxResults": 10
+          },
+          {
+            # 文字识别：提取图片中的文本内容
+            "type": "TEXT_DETECTION"
+          },
+          {
+            # 安全检测：检测不适宜内容
+            "type": "SAFE_SEARCH_DETECTION"
+          }
+        ]
+      }
+    ]
+  }'
+```
+
+<Note>
+  请将 `YOUR_API_KEY` 替换为您在 Google Cloud Console 中创建的 API 密钥。建议对密钥设置 IP 限制或 API 限制以提高安全性。
+</Note>
+
+## Vertex AI 快速体验
+
+<Steps>
+  <Step title="打开 Cloud Console">
+    访问 [Google Cloud Console](https://console.cloud.google.com)，使用您的 Google 账号登录，并选择或创建一个项目。
+  </Step>
+  <Step title="导航至 Vertex AI">
+    在左侧导航菜单中，依次展开「人工智能」分类，点击 **Vertex AI**，进入 Vertex AI 控制台主页。
+  </Step>
+  <Step title="打开 Model Garden">
+    在 Vertex AI 控制台中，点击左侧菜单的 **Model Garden（模型花园）**，浏览 Google 提供的全系列基础模型，包括 Gemini 系列。
+  </Step>
+  <Step title="使用提示词体验 Gemini">
+    在 Model Garden 中找到 **Gemini** 模型卡片，点击「打开」进入 Vertex AI Studio。在文本输入框中输入您的提示词（例如："用中文写一份产品发布公告"），点击「提交」即可即时获得模型输出。
+  </Step>
+</Steps>
+
+<Tip>
+  想深入了解 Vertex AI 的完整功能，包括模型微调、批量预测与 MLOps 流水线，请访问官方文档：[https://cloud.google.com/vertex-ai](https://cloud.google.com/vertex-ai)
+</Tip>

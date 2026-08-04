@@ -1,0 +1,126 @@
+---
+title: "Google 产品集成：连接您的工作流与第三方工具"
+sidebarTitle: "集成"
+description: "通过 Zapier、IFTTT、REST API 与原生连接器，将 Google Workspace 和 Google Cloud 无缝融入您的业务系统。"
+---
+
+Google 秉持开放生态系统理念，致力于让 Google Workspace 和 Google Cloud 成为您现有业务系统的无缝延伸，而非孤立的信息孤岛。无论您的企业正在使用 Salesforce 管理客户关系、用 Jira 跟踪开发进度，还是通过 SAP 运营核心业务流程，Google 都提供了丰富的原生连接器、开放的 REST API 与灵活的自动化工具，让您以最低的集成成本实现跨系统的数据流动与工作流协同。
+
+## 原生集成
+
+以下主流企业工具均提供与 Google Workspace 和 Google Cloud 的原生集成支持：
+
+<CardGroup cols={2}>
+  <Card title="Salesforce" icon="salesforce">
+    通过官方 Salesforce for Google Workspace 集成，在 Gmail 中直接查看和记录 CRM 数据，在 Google 日历中同步销售活动，并将 Google Drive 文件关联至 Salesforce 记录。
+  </Card>
+  <Card title="Slack" icon="slack">
+    Slack 与 Google Drive、Google 日历的官方集成支持在 Slack 频道内预览 Google 文档、接收文件共享通知，并通过日历机器人管理会议安排，实现消息与文件的统一管理。
+  </Card>
+  <Card title="Microsoft 365" icon="microsoft">
+    Google Workspace Migration 工具支持从 Microsoft 365 无缝迁移邮件、日历与联系人，同时 Google Drive 原生支持打开和编辑 Word、Excel 和 PowerPoint 格式文件，降低跨平台协作门槛。
+  </Card>
+  <Card title="SAP" icon="building">
+    Google Cloud 与 SAP 建立了深度合作伙伴关系，支持在 Google Cloud 上运行 SAP S/4HANA，并通过 SAP BTP 集成套件实现 Google BigQuery 与 SAP 数据的双向同步，赋能企业数据分析。
+  </Card>
+  <Card title="ServiceNow" icon="headset">
+    ServiceNow 与 Google Cloud 的集成支持将 IT 工单、事件响应与变更管理流程与 Google Chat 和 Gmail 打通，实现告警通知自动流转，并通过 Vertex AI 为工单处理提供智能建议。
+  </Card>
+  <Card title="Atlassian（Jira/Confluence）" icon="atlassian">
+    Jira 与 Google Workspace 的集成支持在 Gmail 中创建 Jira 工单，在 Google 日历中同步 Sprint 计划；Confluence 页面可直接嵌入 Google 文档与表格，实现研发文档的统一管理。
+  </Card>
+</CardGroup>
+
+## 自动化工具
+
+<CardGroup cols={2}>
+  <Card title="Zapier" icon="bolt">
+    Zapier 提供数千个基于 Google 产品的预构建自动化工作流（Zap），例如"新 Gmail 邮件 → 创建 Trello 卡片"或"Google 表单提交 → 发送 Slack 通知"，无需编写代码即可完成跨平台自动化，适合业务团队快速搭建自动化流程。
+  </Card>
+  <Card title="Google Apps Script" icon="code">
+    Google Apps Script 是内置于 Google Workspace 的轻量级 JavaScript 开发平台，允许您编写脚本扩展 Docs、Sheets、Gmail 等产品的功能，或将 Workspace 与外部 API 连接，完全免费，无需独立部署环境。
+  </Card>
+</CardGroup>
+
+以下是一个使用 Apps Script 通过 Gmail API 发送邮件的示例：
+
+```javascript
+/**
+ * 使用 Google Apps Script 通过 Gmail 发送格式化邮件
+ * 在 Apps Script 编辑器中直接运行此函数
+ */
+function sendNotificationEmail() {
+  // 收件人邮箱地址
+  const recipient = "colleague@example.com";
+
+  // 邮件主题
+  const subject = "【自动通知】Google 表格数据更新提醒";
+
+  // 邮件正文（支持 HTML 格式）
+  const body = `
+    <h2>数据更新通知</h2>
+    <p>您好，</p>
+    <p>以下 Google 表格已于 ${new Date().toLocaleString("zh-CN")} 完成数据更新，请查阅：</p>
+    <p><a href="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID">点击查看表格</a></p>
+    <p>此邮件由自动化脚本发送，请勿直接回复。</p>
+  `;
+
+  // 调用 GmailApp 服务发送邮件
+  GmailApp.sendEmail(recipient, subject, "", {
+    htmlBody: body,          // 使用 HTML 格式正文
+    name: "自动化通知系统",   // 发件人显示名称
+  });
+
+  // 在执行日志中记录发送结果
+  Logger.log("邮件已成功发送至：" + recipient);
+}
+```
+
+<Note>
+  Apps Script 脚本运行在 Google 的云端服务器上，您可以为脚本设置**时间触发器**（每天/每小时自动运行）或**事件触发器**（表单提交、文件修改时触发），无需手动执行。
+</Note>
+
+## Webhook 与推送通知
+
+对于需要实时事件驱动集成的场景，**Google Cloud Pub/Sub** 是推荐的消息传递方案。Pub/Sub 提供了可靠、可扩展的发布/订阅消息模型，支持将 Google Cloud 服务产生的事件（如 Cloud Storage 文件上传、BigQuery 数据更新、Cloud Logging 告警等）实时推送至您的下游系统。
+
+以下示例演示如何使用 `gcloud` CLI 创建 Pub/Sub 主题与推送订阅：
+
+```bash
+# 第一步：创建 Pub/Sub 主题（用于接收 Google Cloud 事件）
+gcloud pubsub topics create google-events-topic \
+  --project=YOUR_PROJECT_ID
+
+# 第二步：创建推送订阅，将消息实时推送至您的 Webhook 端点
+gcloud pubsub subscriptions create google-events-subscription \
+  --topic=google-events-topic \
+  --push-endpoint=https://your-server.example.com/webhooks/google \
+  --ack-deadline=60 \
+  --project=YOUR_PROJECT_ID
+
+# 第三步：为推送端点配置身份验证（推荐使用服务账号）
+gcloud pubsub subscriptions modify-push-config google-events-subscription \
+  --push-endpoint=https://your-server.example.com/webhooks/google \
+  --push-auth-service-account=pubsub-invoker@YOUR_PROJECT_ID.iam.gserviceaccount.com \
+  --project=YOUR_PROJECT_ID
+
+# 验证订阅配置是否正确
+gcloud pubsub subscriptions describe google-events-subscription \
+  --project=YOUR_PROJECT_ID
+```
+
+当 Pub/Sub 向您的 Webhook 端点推送消息时，消息体将以 Base64 编码的 JSON 格式传递，您的服务器需要解码后处理业务逻辑，并在 60 秒内返回 HTTP `200` 状态码以确认消息已成功接收。
+
+## REST API 集成概览
+
+Google 的 API 生态提供了数百个 REST 接口，以下是企业集成中最常用的三种模式：
+
+| 集成模式 | 说明 |
+|---------|------|
+| **批量请求（Batch Requests）** | 将多个 API 调用合并为单个 HTTP 请求发送至 `https://www.googleapis.com/batch`，可显著减少网络往返次数，提升数据批量处理效率，适用于需要同时操作大量资源的场景 |
+| **服务账号认证** | 使用 Google Cloud IAM 服务账号进行 API 认证，适合服务器间（Server-to-Server）的自动化集成场景，无需用户交互即可完成身份验证，是后端系统调用 Google API 的推荐方式 |
+| **OAuth 2.0 用户授权** | 当您的应用需要代表用户访问其 Google 数据（如 Gmail、Drive、Calendar）时，使用 OAuth 2.0 授权流程获取访问令牌。用户在授权页面明确同意后，您的应用才能在授权范围内操作其数据 |
+
+<Tip>
+  查阅完整的 Google API 端点文档、请求/响应示例与 SDK 使用指南，请访问 [API 参考文档](/api/overview)。
+</Tip>

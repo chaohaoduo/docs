@@ -1,0 +1,179 @@
+---
+title: "Google API 认证：API 密钥与 OAuth 2.0 指南"
+sidebarTitle: "认证"
+description: "了解如何使用 API 密钥或 OAuth 2.0 对 Google API 请求进行认证，包括获取凭据、传递方式与安全最佳实践。"
+---
+
+Google API 支持两种主要认证方式：**API 密钥**与 **OAuth 2.0**。API 密钥适用于访问公开数据（无需用户授权），配置简单，适合服务端调用或快速原型开发；OAuth 2.0 则适用于需要代表特定用户访问其私有数据的场景，如读取用户的 Gmail 邮件或 Google Drive 文件。正确选择认证方式是构建安全、合规应用的第一步。
+
+<Warning>
+  **请勿**将 API 密钥、OAuth 客户端密钥或服务账号密钥文件暴露在客户端代码（如前端 JavaScript）或公开代码仓库（如 GitHub）中。一旦泄露，请立即在 [Google Cloud Console](https://console.cloud.google.com/) 吊销并重新生成凭据。
+</Warning>
+
+---
+
+## 方法一：API 密钥
+
+API 密钥是一串唯一的字符串，用于标识发起请求的项目。它适用于访问**公开 API**（如 Custom Search、Maps Static API），无需用户登录或授权。
+
+<Steps>
+  <Step title="打开 Cloud Console 凭据页面">
+    登录 [Google Cloud Console](https://console.cloud.google.com/)，在左侧导航栏选择 **API 和服务** > **凭据**。确保您已选择正确的项目。
+  </Step>
+  <Step title="创建 API 密钥">
+    点击页面顶部的 **「+ 创建凭据」** 按钮，在下拉菜单中选择 **「API 密钥」**。系统将自动生成一个新密钥并弹窗展示。
+  </Step>
+  <Step title="复制您的密钥">
+    在弹出的对话框中复制生成的 API 密钥字符串，妥善保存至安全位置（如密码管理器或密钥管理服务）。关闭弹窗后您仍可在凭据列表中查看，但**无法再次查看完整密钥值**（仅显示前几位）。
+  </Step>
+  <Step title="在请求中传递 API 密钥">
+    通过 URL 查询参数 `key` 将密钥附加到每次请求中：
+
+    ```bash
+    # 使用 API 密钥调用 Custom Search API
+    curl "https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&q=test"
+    ```
+
+    将 `YOUR_API_KEY` 替换为您实际的密钥值。
+  </Step>
+  <Step title="限制密钥（强烈推荐）">
+    为降低密钥被滥用的风险，请在凭据详情页为密钥设置使用限制。支持以下三种限制方式：
+
+    | 限制类型 | 说明 | 适用场景 |
+    |---|---|---|
+    | **HTTP 引用来源** | 仅允许来自指定域名的请求 | 网页应用 |
+    | **IP 地址** | 仅允许来自指定服务器 IP 的请求 | 后端服务 |
+    | **API 限制** | 仅允许调用指定的 API 列表 | 所有场景 |
+
+    在 **Cloud Console** > **凭据** 中点击密钥名称，即可进入编辑页面配置上述限制。
+  </Step>
+</Steps>
+
+---
+
+## 方法二：OAuth 2.0
+
+当您的应用需要以**用户身份**访问其私有数据时（例如读取 Gmail 邮件、管理 Google Drive 文件），必须使用 OAuth 2.0 完成用户授权流程，获取访问令牌（Access Token）后才能调用对应 API。
+
+<Steps>
+  <Step title="在 Cloud Console 创建 OAuth 客户端 ID">
+    登录 [Google Cloud Console](https://console.cloud.google.com/)，进入 **API 和服务** > **凭据**，点击 **「+ 创建凭据」** > **「OAuth 客户端 ID」**。若您尚未配置 OAuth 同意屏幕，系统会提示您先完成配置。
+  </Step>
+  <Step title="选择应用类型">
+    根据您的应用实际情况选择对应的应用类型：
+
+    | 应用类型 | 说明 |
+    |---|---|
+    | **Web 应用** | 运行在服务器上的 Web 应用，支持授权回调 URL |
+    | **桌面应用** | 安装在用户本地设备上的原生应用 |
+    | **Android / iOS** | 移动端原生应用 |
+    | **电视及受限设备** | 输入受限的设备，使用设备授权流程 |
+
+    填写应用名称及授权回调 URL（Web 应用必填），点击 **「创建」**。
+  </Step>
+  <Step title="下载客户端凭据 JSON 文件">
+    创建完成后，点击 **「下载 JSON」** 保存客户端凭据文件（通常命名为 `client_secret_*.json`）。此文件包含 `client_id` 和 `client_secret`，请妥善保管，**切勿提交至代码仓库**。
+  </Step>
+  <Step title="在代码中获取访问令牌">
+    使用 `google-auth` 库完成 OAuth 授权流程，获取访问令牌：
+
+    ```python
+    # 安装依赖：pip install google-auth google-auth-oauthlib google-auth-httplib2
+    from google_auth_oauthlib.flow import InstalledAppFlow
+
+    # 定义所需的权限范围（Scopes）
+    # 此处以访问 Google Drive 只读权限为例
+    SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+
+    # 加载客户端凭据文件，启动本地授权流程
+    flow = InstalledAppFlow.from_client_secrets_file(
+        "client_secret.json",  # 下载的客户端凭据 JSON 文件路径
+        scopes=SCOPES
+    )
+
+    # 在本地浏览器中打开授权页面，用户同意后自动获取凭据
+    credentials = flow.run_local_server(port=0)
+
+    # 获取访问令牌字符串
+    access_token = credentials.token
+    print(f"访问令牌：{access_token}")
+    ```
+  </Step>
+  <Step title="在请求头中传递访问令牌">
+    获取到访问令牌后，将其放入 HTTP 请求的 `Authorization` 头部，格式为 `Bearer <ACCESS_TOKEN>`：
+
+    ```bash
+    # 使用访问令牌调用 Google Drive API，列出用户文件
+    curl "https://www.googleapis.com/drive/v3/files" \
+      -H "Authorization: Bearer ACCESS_TOKEN"  # 替换为实际的访问令牌
+    ```
+
+    <Note>
+      访问令牌默认有效期为 **1 小时**。令牌过期后，您可以使用刷新令牌（Refresh Token）自动续期，无需用户重新授权。`google-auth` 库会在令牌即将过期时自动刷新。
+    </Note>
+  </Step>
+</Steps>
+
+---
+
+## 服务账号认证
+
+**服务账号（Service Account）** 是一种特殊的 Google 账号，专为应用程序或服务器之间的交互设计，无需代表任何真实用户，适合**自动化任务、批处理作业和后端服务**等场景（即服务端对服务端，Server-to-Server）。
+
+常见使用场景包括：
+- 定时从 Cloud Storage 读写数据
+- 在 CI/CD 流水线中调用 Google Cloud API
+- 后台任务访问 BigQuery 或 Pub/Sub
+
+**使用服务账号的步骤：**
+
+1. 在 **Cloud Console** > **IAM 和管理** > **服务账号** 中创建服务账号
+2. 为其分配最小必要权限（遵循最小权限原则）
+3. 创建并下载 **JSON 格式**的密钥文件
+
+```python
+# 安装依赖：pip install google-auth google-api-python-client
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
+# 服务账号密钥文件路径（请勿将此文件提交至代码仓库）
+SERVICE_ACCOUNT_FILE = "service_account_key.json"
+
+# 定义所需的权限范围
+SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
+
+# 使用服务账号密钥文件创建凭据对象
+credentials = service_account.Credentials.from_service_account_file(
+    SERVICE_ACCOUNT_FILE,
+    scopes=SCOPES
+)
+
+# 使用凭据构建 API 客户端（以 Cloud Resource Manager 为例）
+service = build("cloudresourcemanager", "v1", credentials=credentials)
+
+# 发起 API 请求：列出当前服务账号有权访问的项目
+request = service.projects().list()
+response = request.execute()
+
+# 打印项目列表
+for project in response.get("projects", []):
+    print(f"项目 ID：{project['projectId']}，名称：{project['name']}")
+```
+
+<Note>
+  建议将服务账号密钥文件存储在 **Secret Manager** 或环境变量中，而非直接以文件形式部署到服务器。在 Google Cloud 托管环境（如 Cloud Run、GKE）中，可直接使用**工作负载身份联合（Workload Identity Federation）**，无需管理密钥文件。
+</Note>
+
+---
+
+## 认证方式对比
+
+| 认证方式 | 适用场景 | 用户授权是否必需 | 安全性 |
+|---|---|---|---|
+| **API 密钥** | 访问公开数据（搜索、地图等），快速原型开发 | 否 | ⭐⭐（需配合限制策略使用） |
+| **OAuth 2.0** | 代表用户访问其私有数据（Gmail、Drive 等） | 是 | ⭐⭐⭐⭐（令牌有效期短，支持权限范围限制） |
+| **服务账号** | 服务端自动化任务，无用户参与的后端服务 | 否 | ⭐⭐⭐（需严格管控密钥文件访问权限） |
+
+<Tip>
+  在大多数生产环境中，推荐优先使用 **OAuth 2.0** 或**服务账号**，并为凭据设置最小权限范围。如需进一步了解 Google API 的安全配置与最佳实践，请参阅 [安全指南](/features/security)。
+</Tip>

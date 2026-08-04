@@ -1,0 +1,264 @@
+---
+title: "Google API 与产品使用最佳实践"
+sidebarTitle: "最佳实践"
+description: "掌握 Google API 配额管理、错误处理、成本优化与性能调优的实用技巧，构建稳定高效的应用。"
+---
+
+构建基于 Google API 的应用时，合理的配额管理、健壮的错误处理、精细的成本控制和高效的性能优化是决定应用质量的关键因素。本指南汇总了在生产环境中使用 Google API 的核心最佳实践，帮助您的应用在稳定性、可靠性和经济性之间取得最佳平衡。
+
+---
+
+## 配额与限制管理
+
+Google API 对每个项目设有配额限制，以确保服务的公平使用和整体稳定性。了解并主动管理配额，是避免服务中断的关键。
+
+### 配额的类型
+
+| 配额类型 | 说明 | 示例 |
+|----------|------|------|
+| **每日请求数** | 24 小时内允许的最大请求次数 | Maps API：每天 25,000 次地图加载 |
+| **每分钟请求数** | 60 秒内允许的最大请求次数 | Gmail API：每分钟 250 个单位 |
+| **每用户配额** | 单个用户或 IP 在单位时间内的请求上限 | Drive API：每用户每 100 秒 1,000 次请求 |
+
+### 查看当前配额使用情况
+
+1. 前往 [Cloud Console](https://console.cloud.google.com)
+2. 进入 **IAM 与管理 > 配额**
+3. 使用筛选器搜索特定 API 的配额项
+4. 查看当前使用量与上限，识别接近阈值的配额项
+
+### 申请提高配额
+
+若您的业务需求超出默认配额，可通过以下方式申请提高：
+
+1. 在**配额**页面中，勾选需要调整的配额项
+2. 点击顶部的**修改配额**
+3. 填写新的配额需求值及业务理由
+4. 提交后，Google 团队通常在 2–3 个工作日内审核
+
+<Note>
+  部分配额提高请求需要填写详细的业务说明，建议提供预期流量增长数据以提升审批通过率。
+</Note>
+
+### 指数退避重试策略
+
+当请求因配额限制（HTTP 429）或临时服务错误（HTTP 500/503）失败时，使用指数退避算法可以有效避免持续重试加剧服务压力：
+
+```python
+import time
+import random
+import requests
+
+def call_google_api_with_backoff(url, params, max_retries=5):
+    """
+    使用指数退避策略调用 Google API。
+    
+    参数：
+        url: API 端点地址
+        params: 请求参数字典
+        max_retries: 最大重试次数，默认为 5
+    """
+    for attempt in range(max_retries):
+        response = requests.get(url, params=params)
+
+        # 请求成功，直接返回结果
+        if response.status_code == 200:
+            return response.json()
+
+        # 遇到配额限制或服务器临时错误，执行退避重试
+        if response.status_code in (429, 500, 503):
+            if attempt == max_retries - 1:
+                # 已达到最大重试次数，抛出异常
+                raise Exception(f"请求失败，已重试 {max_retries} 次。最后状态码：{response.status_code}")
+
+            # 计算等待时间：2^attempt 秒 + 随机抖动（避免多个客户端同时重试）
+            wait_time = (2 ** attempt) + random.uniform(0, 1)
+            print(f"第 {attempt + 1} 次重试，等待 {wait_time:.2f} 秒后重试...")
+            time.sleep(wait_time)
+        else:
+            # 其他错误（如 400、401、403）不应重试，直接抛出异常
+            response.raise_for_status()
+
+# 使用示例
+result = call_google_api_with_backoff(
+    url="https://www.googleapis.com/calendar/v3/calendars/primary/events",
+    params={"key": "YOUR_API_KEY", "maxResults": 10}
+)
+print(result)
+```
+
+---
+
+## 错误处理
+
+正确识别和处理 API 错误是构建健壮应用的基础。以下是常见 HTTP 错误码及其推荐处理方式：
+
+| 状态码 | 错误类型 | 常见原因 | 推荐操作 |
+|--------|----------|----------|----------|
+| **400** | Bad Request（错误请求） | 请求参数格式不正确、缺少必填字段、参数值超出范围 | 检查请求体格式与参数值，参照 API 文档修正后重新发送 |
+| **401** | Unauthorized（未授权） | 未提供认证凭据，或凭据已过期 | 检查 API 密钥或 OAuth 令牌是否有效；刷新访问令牌后重试 |
+| **403** | Forbidden（禁止访问） | 凭据有效但权限不足，或 API 未启用，或请求来源受限 | 确认账号已被授予所需 IAM 角色；检查 API 是否已在 Cloud Console 中启用；核查 API 密钥的应用限制设置 |
+| **429** | Too Many Requests（请求过多） | 超出每分钟或每日配额限制 | 实施指数退避重试；评估是否需要申请提高配额；考虑使用缓存减少重复请求 |
+| **500** | Internal Server Error（服务器内部错误） | Google 服务端临时故障 | 稍后使用指数退避策略重试；如持续出现，前往 [Google Cloud 状态页](https://status.cloud.google.com) 查看服务状态 |
+
+<Warning>
+  收到 **401** 或 **403** 错误时，请勿无限次重试，应先排查权限问题再重新发起请求，避免账号因异常行为触发安全保护机制。
+</Warning>
+
+---
+
+## 成本优化技巧
+
+<AccordionGroup>
+  <Accordion title="使用缓存减少 API 调用">
+    对于不频繁变化的数据，在本地或服务器端缓存 API 响应结果，可以显著减少 API 调用次数和费用。
+
+    **推荐策略：**
+    - 对 Maps API 的地理编码结果、静态地图图块设置本地缓存，有效期可设为 24 小时以上
+    - 对 Google Drive 的文件列表、目录结构使用内存缓存（如 Redis）
+    - 为缓存设置合理的 TTL（生存时间），确保数据时效性
+
+    ```python
+    import functools
+    import time
+
+    # 简单的内存缓存装饰器示例（缓存有效期 10 分钟）
+    def cache_with_ttl(ttl_seconds=600):
+        cache = {}
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args):
+                now = time.time()
+                if args in cache and now - cache[args]['time'] < ttl_seconds:
+                    print("命中缓存，跳过 API 调用")
+                    return cache[args]['value']
+                result = func(*args)
+                cache[args] = {'value': result, 'time': now}
+                return result
+            return wrapper
+        return decorator
+    ```
+  </Accordion>
+
+  <Accordion title="批量请求合并">
+    将多个独立的 API 请求合并为单次批量请求，可减少网络往返次数，并降低 API 调用成本。
+
+    **适用场景：**
+    - Google Workspace APIs（Gmail、Drive、Calendar）支持批量请求
+    - BigQuery 可通过一次查询处理大量数据，避免多次小查询
+
+    **Google API 批量请求示例：**
+
+    ```python
+    from googleapiclient.http import BatchHttpRequest
+
+    # 创建批量请求对象
+    batch = service.new_batch_http_request()
+
+    # 将多个请求加入批次
+    batch.add(service.users().messages().get(userId='me', id='msg_id_1'))
+    batch.add(service.users().messages().get(userId='me', id='msg_id_2'))
+    batch.add(service.users().messages().get(userId='me', id='msg_id_3'))
+
+    # 一次性执行所有请求
+    batch.execute()
+    ```
+
+    <Note>
+      每个批量请求最多包含 **100** 个子请求。超出数量时，请将请求分批次发送。
+    </Note>
+  </Accordion>
+
+  <Accordion title="选择适合的服务层级">
+    Google Cloud 对许多服务提供多种服务层级或定价模式，选择与您实际需求匹配的层级，可以避免为不必要的功能付费。
+
+    **常见选择建议：**
+
+    | 场景 | 推荐方案 |
+    |------|----------|
+    | 开发与测试环境 | 使用免费套餐或按需付费的最低配置 |
+    | 数据归档存储 | 选择 Cloud Storage Coldline 或 Archive 层级 |
+    | 可中断的批处理任务 | 使用 Spot VM（抢占式实例），费用可降低 60–91% |
+    | 稳定的长期工作负载 | 购买承诺使用折扣（CUD），可节省高达 57% 费用 |
+  </Accordion>
+
+  <Accordion title="设置预算告警">
+    通过设置预算告警，您可以在费用超出预期前及时收到通知，从而采取措施控制成本。
+
+    **使用 gcloud CLI 创建预算告警：**
+
+    ```bash
+    # 为项目设置每月 100 美元的预算告警
+    # 当实际费用达到预算的 50%、90% 和 100% 时触发通知
+    gcloud billing budgets create \
+      --billing-account=YOUR_BILLING_ACCOUNT_ID \
+      --display-name="每月费用告警" \
+      --budget-amount=100USD \
+      --threshold-rule=percent=0.5 \
+      --threshold-rule=percent=0.9 \
+      --threshold-rule=percent=1.0 \
+      --filter-projects=projects/YOUR_PROJECT_ID
+    ```
+
+    **说明：**
+    - `--billing-account`：您的结算账户 ID（格式：`XXXXXX-XXXXXX-XXXXXX`）
+    - `--budget-amount`：每月预算金额（支持 USD 及其他货币）
+    - `--threshold-rule`：触发告警的费用比例阈值，可设置多个
+
+    <Tip>
+      告警通知默认发送至结算账户的管理员邮箱。您也可以配置 Pub/Sub 主题，实现告警与自动化响应（如自动停止服务）的集成。详见 [Google Cloud 预算告警文档](https://cloud.google.com/billing/docs/how-to/budgets)。
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## 性能优化
+
+### 使用区域端点
+
+当您的应用服务于特定地理区域的用户时，选择离用户最近的区域端点可显著降低网络延迟：
+
+- 在创建 Cloud Storage 存储桶、Pub/Sub 主题、Cloud Functions 等资源时，选择与用户最近的区域
+- Cloud Run、GKE 等计算服务支持多区域部署，结合全球负载均衡器自动路由流量
+- BigQuery 支持区域数据集，将数据存放在与处理服务相同的区域，避免跨区域传输费用
+
+### 启用 Gzip 压缩
+
+对 API 请求和响应启用 Gzip 压缩，可减少传输数据量，提升响应速度：
+
+```python
+import requests
+
+# 在请求头中声明支持 Gzip 压缩
+headers = {
+    "Accept-Encoding": "gzip, deflate",  # 接受压缩响应
+    "Content-Encoding": "gzip",          # 发送压缩请求体（适用于 POST/PUT）
+    "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+}
+
+response = requests.get(
+    "https://www.googleapis.com/drive/v3/files",
+    headers=headers
+)
+# requests 库会自动解压 Gzip 响应内容
+print(response.json())
+```
+
+### 使用批量请求处理 Google Workspace API
+
+对于 Gmail、Drive、Calendar 等 Workspace API，批量处理多个操作可减少 HTTP 连接开销：
+
+```python
+# 通过批量请求一次性获取多个日历事件详情，而非逐个请求
+# 每次批量请求最多可包含 100 个子请求
+# 详见"成本优化技巧 > 批量请求合并"章节示例
+```
+
+<Note>
+  Google Workspace API 的批量请求端点为 `https://www.googleapis.com/batch/{api_name}/{api_version}`，请参阅各 API 的官方文档确认是否支持批量操作。
+</Note>
+
+<Tip>
+  建议在 Cloud Console 的**结算 > 预算和提醒**中配置自动化预算告警，结合 Pub/Sub 实现实时费用监控与自动响应。了解详细配置方法，请访问 [Google Cloud 预算告警文档](https://cloud.google.com/billing/docs/how-to/budgets)。
+</Tip>
