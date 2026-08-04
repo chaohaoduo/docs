@@ -9,16 +9,16 @@ Google 将安全视为产品设计的第一优先级，而非事后补充的功�
 ## 数据保护
 
 <CardGroup cols={2}>
-  <Card title="传输加密（TLS 1.3）" icon="shield">
+  <Card title="传输加密（TLS 1.3）" icon="shield" href="https://cloud.google.com/docs/security/encryption-in-transit">
     所有在用户设备与 Google 服务器之间传输的数据，均使用 **TLS 1.3** 协议进行加密，防止中间人攻击与流量窃听。Google 还实施了 HTTP Strict Transport Security（HSTS），强制所有连接使用加密通道。
   </Card>
-  <Card title="存储加密（AES-256）" icon="lock">
+  <Card title="存储加密（AES-256）" icon="lock" href="https://cloud.google.com/docs/security/encryption/default-encryption">
     静态数据在 Google 存储基础设施中使用 **AES-256** 标准进行加密，每个数据块均有独立的加密密钥，密钥本身由主密钥二次加密，形成多层密钥保护体系。
   </Card>
-  <Card title="客户管理密钥（CMEK）" icon="key">
+  <Card title="客户管理密钥（CMEK）" icon="key" href="https://cloud.google.com/kms/docs/cmek">
     企业客户可通过 **客户管理加密密钥（CMEK）** 使用自己在 Cloud KMS 中管理的密钥加密 Google Cloud 数据，实现对数据加密生命周期的完全自主控制，满足数据主权合规要求。
   </Card>
-  <Card title="数据丢失防护（DLP）" icon="eye">
+  <Card title="数据丢失防护（DLP）" icon="eye" href="https://cloud.google.com/sensitive-data-protection/docs/dlp-overview">
     **Cloud DLP** 可自动扫描、识别并保护敏感信息（如身份证号、信用卡号、医疗数据），支持在数据存储、传输和使用过程中触发自动脱敏、告警或阻断操作，防止敏感数据意外泄露。
   </Card>
 </CardGroup>

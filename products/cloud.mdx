@@ -1,7 +1,7 @@
 ---
-title: "Google Cloud：全球企业级云计算平台"
+title: "Google Cloud：依托全球 35 个以上数据中心地区的企业级云计算、AI 与网络安全服务平台"
 sidebarTitle: "Cloud"
-description: "Google Cloud 提供计算、存储、数据库、网络、AI/ML 及安全等完整云服务，支撑全球数百万企业应用。"
+description: "Google Cloud 提供覆盖计算（Compute Engine、GKE、Cloud Run）、存储、数据库（BigQuery、Cloud SQL）、AI/ML（Vertex AI）与网络安全的全栈云服务，依托全球 35 个以上地区的超大规模基础设施，支撑数百万企业应用实现高可用低延迟的云端运行。"
 ---
 
 Google Cloud 是 Google 面向全球企业提供的综合性云计算平台，依托覆盖全球 **35 个以上地区、100 余个可用区**的超大规模基础设施，为您的业务提供高可用、低延迟的云服务。Google Cloud 在 AI 与机器学习、大数据分析和网络安全三大领域具备显著差异化优势——Vertex AI 平台集成了 Gemini 等前沿大模型，BigQuery 重新定义了 PB 级数据分析的速度与成本，而 Google 自研的 Titan 安全芯片与 BeyondCorp 零信任架构则为您的数据和工作负载提供从芯片到应用的全栈安全保障。无论您是初创企业还是跨国集团，Google Cloud 都能提供灵活弹性的按需付费服务，支撑您的数字化转型之旅。
@@ -11,32 +11,32 @@ Google Cloud 是 Google 面向全球企业提供的综合性云计算平台，�
 ## 核心服务类别
 
 <CardGroup cols={2}>
-  <Card title="计算服务" icon="server">
+  <Card title="计算服务" icon="server" href="https://cloud.google.com/products/compute">
     **Compute Engine**：高性能可定制虚拟机，支持多种机型与操作系统，满足通用计算、内存密集型与 GPU 加速等多样化需求。  
     **Google Kubernetes Engine (GKE)**：全托管 Kubernetes 服务，简化容器化应用的部署、扩缩容与运维管理。  
     **Cloud Run**：无服务器容器运行平台，按实际请求计费，自动扩缩容至零，让您专注业务逻辑而非基础设施。
   </Card>
-  <Card title="存储与数据库" icon="database">
+  <Card title="存储与数据库" icon="database" href="https://cloud.google.com/products/storage">
     **Cloud Storage**：全球统一的对象存储服务，提供标准、近线、冷线与归档四种存储类别，满足不同成本与访问频率需求。  
     **BigQuery**：全托管无服务器数据仓库，支持对 PB 级数据进行秒级 SQL 查询，内置 ML 能力与 BI 引擎。  
     **Cloud SQL**：全托管关系型数据库服务，支持 MySQL、PostgreSQL 与 SQL Server，自动备份与故障转移。
   </Card>
-  <Card title="AI 与机器学习" icon="brain">
+  <Card title="AI 与机器学习" icon="brain" href="https://cloud.google.com/products/ai">
     **Vertex AI**：统一的 AI 开发平台，提供从数据准备、模型训练、部署到监控的端到端 MLOps 流程，并提供 Gemini 等预训练模型 API。  
     **Cloud Vision API**：强大的图像分析服务，支持物体检测、OCR 文字识别、人脸检测与内容审核。  
     **Natural Language API**：自然语言处理服务，提供情感分析、实体识别、语法分析与内容分类能力。
   </Card>
-  <Card title="网络服务" icon="network-wired">
+  <Card title="网络服务" icon="network-wired" href="https://cloud.google.com/products/networking">
     **Cloud CDN**：基于 Google 全球边缘节点的内容分发网络，将静态与动态内容缓存至距用户最近的节点，大幅降低延迟。  
     **Cloud Load Balancing**：全球负载均衡服务，支持 HTTP(S)、TCP、UDP 流量分发，自动应对流量峰值。  
     **Virtual Private Cloud (VPC)**：软件定义的私有云网络，支持全球单一 VPC 架构与灵活的子网、路由与防火墙配置。
   </Card>
-  <Card title="安全" icon="shield-halved">
+  <Card title="安全" icon="shield-halved" href="https://cloud.google.com/products/security">
     **Cloud IAM**：精细化身份与访问管理，基于最小权限原则控制谁可以对哪些资源执行哪些操作。  
     **Cloud Armor**：DDoS 防护与 Web 应用防火墙（WAF）服务，保护您的应用免受大规模网络攻击与 OWASP Top 10 漏洞威胁。  
     **Secret Manager**：安全存储和管理 API 密钥、密码、证书等敏感配置信息，支持版本管理与自动轮换。
   </Card>
-  <Card title="开发者工具" icon="code">
+  <Card title="开发者工具" icon="code" href="https://cloud.google.com/products/developer-tools">
     **Cloud Build**：全托管 CI/CD 平台，支持从源代码到容器镜像的自动化构建、测试与部署流水线。  
     **Artifact Registry**：统一的制品管理仓库，支持 Docker 镜像、Maven、npm、Python 等多种包格式的存储与分发。  
     **Cloud Code**：适用于 VS Code 与 JetBrains IDE 的插件，提供 Kubernetes 与 Cloud Run 应用的本地开发、调试与部署支持。
@@ -60,10 +60,10 @@ gcloud builds submit --tag asia-east1-docker.pkg.dev/YOUR_PROJECT_ID/my-repo/my-
 # 第三步：将容器镜像部署到 Cloud Run
 gcloud run deploy my-app \
   --image asia-east1-docker.pkg.dev/YOUR_PROJECT_ID/my-repo/my-app:v1 \
-  --platform managed \       # 使用全托管模式，无需管理服务器
-  --allow-unauthenticated \  # 允许公开访问（如需鉴权请移除此参数）
-  --memory 512Mi \           # 分配 512 MB 内存
-  --concurrency 80           # 每个容器实例最多处理 80 个并发请求
+  --platform managed \
+  --allow-unauthenticated \
+  --memory 512Mi \
+  --concurrency 80
 
 # 部署成功后，命令行将输出服务的公网访问 URL
 # 示例：https://my-app-xxxxxxxxxx-de.a.run.app

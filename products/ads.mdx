@@ -1,7 +1,7 @@
 ---
-title: "Google Ads：智能数字广告，精准触达目标客户"
+title: "Google Ads：AI 驱动的全渠道数字广告投放与优化平台，精准触达目标受众并最大化广告投资回报"
 sidebarTitle: "Ads"
-description: "Google Ads 整合搜索广告、展示广告、视频广告与购物广告，利用 AI 优化出价与定向，最大化广告效果。"
+description: "Google Ads 将搜索广告、展示广告、YouTube 视频广告与购物广告无缝整合到一个智能化投放平台，利用 AI 智能出价策略与精准受众定向持续提升广告转化效果，并通过强大的 Google Ads API 为企业级用户提供大规模程序化广告管理与自动化运营能力。"
 ---
 
 Google Ads 是 Google 的全球广告平台，让您的品牌能够在用户最活跃的场景中精准曝光——无论是在 **Google 搜索结果页**捕捉主动搜索的高意图用户，在 **YouTube** 以视频形式激发购买兴趣，在 **Gmail** 收件箱中直达潜在客户，还是通过覆盖数百万网站的 **Google 展示广告网络**持续强化品牌认知。借助 Google 强大的 AI 能力，Google Ads 能够自动优化出价、定向与创意组合，帮助您以合理的预算实现最大化的广告回报。
@@ -11,22 +11,22 @@ Google Ads 是 Google 的全球广告平台，让您的品牌能够在用户最�
 ## 广告类型
 
 <CardGroup cols={2}>
-  <Card title="搜索广告" icon="magnifying-glass">
+  <Card title="搜索广告" icon="magnifying-glass" href="https://ads.google.com/intl/zh-CN/home/campaigns/search-ads/">
     在 Google 搜索结果页顶部或底部展示文字广告，精准触达正在主动搜索相关产品或服务的高意图用户，按点击付费（CPC）。
   </Card>
-  <Card title="展示广告" icon="image">
+  <Card title="展示广告" icon="image" href="https://ads.google.com/intl/zh-CN/home/campaigns/display-ads/">
     通过 Google 展示广告网络（GDN）在数百万合作网站、应用与 Gmail 中展示图片或富媒体广告，有效扩大品牌覆盖面。
   </Card>
-  <Card title="视频广告" icon="video">
+  <Card title="视频广告" icon="video" href="https://ads.google.com/intl/zh-CN/home/campaigns/video-ads/">
     在 YouTube 及 Google 视频合作伙伴平台投放可跳过或不可跳过的视频广告，以沉浸式视觉内容提升品牌知名度与用户参与度。
   </Card>
-  <Card title="购物广告" icon="cart-shopping">
+  <Card title="购物广告" icon="cart-shopping" href="https://ads.google.com/intl/zh-CN/home/campaigns/shopping-ads/">
     在 Google 搜索与购物标签页中直接展示商品图片、价格与店铺名称，帮助电商商家吸引高购买意向的消费者，缩短购买决策路径。
   </Card>
-  <Card title="应用广告" icon="mobile">
+  <Card title="应用广告" icon="mobile" href="https://ads.google.com/intl/zh-CN/home/campaigns/app-ads/">
     一键将广告投放至 Google 搜索、Google Play、YouTube 与 GDN，自动优化素材与出价，以最低成本驱动应用安装与应用内转化。
   </Card>
-  <Card title="智慧广告系列" icon="robot">
+  <Card title="智慧广告系列" icon="robot" href="https://ads.google.com/intl/zh-CN/home/campaigns/smart-campaigns/">
     专为中小企业设计的全自动化广告方案，只需提供业务信息与目标，Google AI 将全程负责广告创建、投放与优化，极大降低运营门槛。
   </Card>
 </CardGroup>
@@ -98,3 +98,61 @@ Performance Max 是 Google 推出的全渠道自动化广告系列，只需提�
 <Note>
   建议开启**自动应用建议**功能，让 Google AI 根据账户数据自动执行出价调整、关键词扩展与广告优化，进一步解放您的运营精力。
 </Note>
+
+---
+
+## Google Ads API 程序化管理
+
+对于需要管理大量广告账户或构建自动化投放系统的企业，**Google Ads API** 提供完整的程序化接口，让您能够以代码方式创建、修改与分析广告系列。
+
+<CardGroup cols={2}>
+  <Card title="Google Ads API 文档" icon="book" href="https://developers.google.com/google-ads/api/docs/start">
+    访问官方文档，了解 Google Ads API 的完整功能参考、身份验证流程与最佳实践，支持 Java、Python、PHP、Ruby、.NET 等多种客户端库。
+  </Card>
+  <Card title="API 使用场景" icon="code" href="https://developers.google.com/google-ads/api/docs/concepts/overview">
+    Google Ads API 适用于：批量创建与管理广告系列、自动化出价规则、构建跨账户报表仪表板，以及与 CRM 系统进行转化数据同步。
+  </Card>
+</CardGroup>
+
+以下示例展示如何使用 Python 客户端库通过 Google Ads API 查询账户中的广告系列列表：
+
+```python
+from google.ads.googleads.client import GoogleAdsClient
+
+# 使用 OAuth2 凭据文件初始化客户端（详见官方文档配置说明）
+client = GoogleAdsClient.load_from_storage("google-ads.yaml")
+
+CUSTOMER_ID = "YOUR_CUSTOMER_ID"  # 替换为您的 Google Ads 客户 ID（不含连字符）
+
+ga_service = client.get_service("GoogleAdsService")
+
+query = """
+    SELECT
+        campaign.id,
+        campaign.name,
+        campaign.status,
+        metrics.impressions,
+        metrics.clicks,
+        metrics.cost_micros
+    FROM campaign
+    WHERE campaign.status != 'REMOVED'
+    ORDER BY metrics.impressions DESC
+    LIMIT 10
+"""
+
+response = ga_service.search(customer_id=CUSTOMER_ID, query=query)
+
+for row in response:
+    campaign = row.campaign
+    metrics = row.metrics
+    cost = metrics.cost_micros / 1_000_000  # 转换为标准货币单位
+    print(
+        f"广告系列 [{campaign.id}] {campaign.name} | "
+        f"曝光：{metrics.impressions} | 点击：{metrics.clicks} | "
+        f"花费：{cost:.2f}"
+    )
+```
+
+<Warning>
+  调用 Google Ads API 需要通过 OAuth 2.0 完成身份验证，并申请开发者令牌（Developer Token）。基本访问级别的开发者令牌仅可在测试账户中使用；若需在正式账户投放，请申请标准访问权限。详情请参阅 [Google Ads API 访问级别说明](https://developers.google.com/google-ads/api/docs/access-levels)。
+</Warning>

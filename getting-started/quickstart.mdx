@@ -99,14 +99,14 @@ import requests  # 需要先安装：pip install requests
 # 替换为您的实际 API 密钥和搜索引擎 ID
 API_KEY = "YOUR_API_KEY"
 SEARCH_ENGINE_ID = "YOUR_SEARCH_ENGINE_ID"
-查询词 = "Google"
+query = "Google"  # 查询词
 
 # 构建请求 URL
 url = "https://www.googleapis.com/customsearch/v1"
 params = {
     "key": API_KEY,
     "cx": SEARCH_ENGINE_ID,
-    "q": 查询词,
+    "q": query,
 }
 
 # 发起 GET 请求
@@ -129,13 +129,13 @@ else:
 // 替换为您的实际 API 密钥和搜索引擎 ID
 const API_KEY = "YOUR_API_KEY";
 const SEARCH_ENGINE_ID = "YOUR_SEARCH_ENGINE_ID";
-const 查询词 = "Google";
+const query = "Google"; // 查询词
 
 // 构建请求 URL
 const url = new URL("https://www.googleapis.com/customsearch/v1");
 url.searchParams.set("key", API_KEY);
 url.searchParams.set("cx", SEARCH_ENGINE_ID);
-url.searchParams.set("q", 查询词);
+url.searchParams.set("q", query);
 
 // 使用 fetch 发起请求（Node.js 18+ 原生支持）
 async function search() {

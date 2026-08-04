@@ -1,7 +1,7 @@
 ---
-title: "Google Maps Platform：精准地图与位置服务"
+title: "Google Maps Platform：提供地图展示、路线规划与地理编码 API，覆盖全球 220 余个国家"
 sidebarTitle: "Maps"
-description: "Google Maps Platform 提供地图、路线规划、地点搜索与位置数据 API，覆盖全球 220 余个国家和地区。"
+description: "Google Maps Platform 通过 Maps JavaScript API、Geocoding API、Routes API 与 Places API，覆盖全球 220 余个国家和地区，帮助开发者快速构建地图展示、路线规划、地点搜索与位置数据集成等精准的位置服务应用。"
 ---
 
 Google Maps Platform 是 Google 面向开发者与企业提供的一套地图与位置服务 API，覆盖全球 **220 余个国家和地区**，拥有超过 2500 万条每日更新的地图数据。无论您是要在网页或移动端嵌入交互式地图、为用户提供实时路线规划，还是构建基于位置的个性化体验，Google Maps Platform 都能为您提供稳定、精准、可扩展的基础设施支撑。
@@ -11,16 +11,16 @@ Google Maps Platform 是 Google 面向开发者与企业提供的一套地图与
 ## 核心产品
 
 <CardGroup cols={2}>
-  <Card title="Maps（地图展示）" icon="map">
+  <Card title="Maps（地图展示）" icon="map" href="https://developers.google.com/maps/documentation/javascript">
     在网页与移动应用中嵌入动态交互地图，支持自定义样式、标注图层、街景视图与卫星影像，帮助用户直观了解地理位置信息。
   </Card>
-  <Card title="Routes（路线规划）" icon="route">
+  <Card title="Routes（路线规划）" icon="route" href="https://developers.google.com/maps/documentation/routes">
     提供驾车、步行、骑行与公共交通多种出行方式的最优路线计算，支持实时路况、途经点优化与距离矩阵批量计算。
   </Card>
-  <Card title="Places（地点搜索）" icon="location-dot">
+  <Card title="Places（地点搜索）" icon="location-dot" href="https://developers.google.com/maps/documentation/places/web-service">
     通过地点搜索、自动补全、地点详情与附近搜索 API，帮助用户快速发现并获取全球超过 2.5 亿个地点的详细信息。
   </Card>
-  <Card title="Environment（环境数据）" icon="leaf">
+  <Card title="Environment（环境数据）" icon="leaf" href="https://developers.google.com/maps/documentation/air-quality">
     提供空气质量指数（AQI）、太阳能辐射潜力与花粉浓度等环境数据 API，助力构建健康出行与绿色能源应用。
   </Card>
 </CardGroup>
@@ -33,19 +33,19 @@ Google Maps Platform 是 Google 面向开发者与企业提供的一套地图与
 集成 Routes API 与 Maps JavaScript API，实现骑手实时位置追踪、最优配送路线规划与预计到达时间展示，显著提升配送效率与用户体验。
 
 **打车应用**
-利用 Maps SDK、Distance Matrix API 与 Geocoding API，快速匹配司乘双方位置，动态规划行驶路线，并在地图上实时展示车辆轨迹。
+利用 Maps JavaScript API、Distance Matrix API 与 Geocoding API，快速匹配司乘双方位置，动态规划行驶路线，并在地图上实时展示车辆轨迹。
 
 **旅游应用**
-通过 Places API 获取景点详情、用户评分与营业时间，结合 Maps 嵌入地图为游客提供个性化行程规划与周边推荐服务。
+通过 Places API 获取景点详情、用户评分与营业时间，结合 Maps JavaScript API 嵌入地图为游客提供个性化行程规划与周边推荐服务。
 
 **房产平台**
-借助 Maps Embed API 与 Places API，在房源页面展示地周边配套（学校、医院、地铁站），帮助购房者更全面地评估地段价值。
+借助 Maps Embed API 与 Places API，在房源页面展示周边配套设施（学校、医院、地铁站），帮助购房者更全面地评估地段价值。
 
 ---
 
 ## 快速集成 Maps JavaScript API
 
-以下示例展示如何通过 Maps JavaScript API 在网页中加载一张以北京为中心的交互式地图：
+Maps JavaScript API 让您能够在任何网页中嵌入可交互的 Google 地图。以下示例展示如何加载一张以北京为中心的交互式地图：
 
 ```html
 <!DOCTYPE html>
@@ -99,6 +99,41 @@ Google Maps Platform 是 Google 面向开发者与企业提供的一套地图与
 <Tip>
   还没有 API 密钥？请参阅 [快速入门指南](/getting-started/quickstart) 了解如何创建 Google Cloud 项目并启用 Maps API。
 </Tip>
+
+---
+
+## 使用 Geocoding API 转换地址
+
+Geocoding API 可将人类可读的地址字符串转换为地理坐标（正向地理编码），也可将坐标反向解析为地址（反向地理编码）。以下示例使用 Python 调用 Geocoding API：
+
+```python
+import requests
+
+API_KEY = "YOUR_API_KEY"   # 替换为您的 Maps API 密钥
+address = "北京市海淀区中关村南大街5号"
+
+url = "https://maps.googleapis.com/maps/api/geocode/json"
+params = {
+    "address": address,
+    "key": API_KEY,
+    "language": "zh-CN",
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+if data["status"] == "OK":
+    location = data["results"][0]["geometry"]["location"]
+    formatted = data["results"][0]["formatted_address"]
+    print(f"地址：{formatted}")
+    print(f"纬度：{location['lat']}，经度：{location['lng']}")
+else:
+    print(f"请求失败：{data['status']}")
+```
+
+<Note>
+  Geocoding API 与 Maps JavaScript API 使用同一个 API 密钥。请确保在 [Google Cloud Console](https://console.cloud.google.com) 中已为该密钥启用 **Geocoding API** 权限，并设置适当的 HTTP 引用来源或 IP 地址限制以保护密钥安全。
+</Note>
 
 ---
 

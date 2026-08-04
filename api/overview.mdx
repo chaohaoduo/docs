@@ -1,7 +1,7 @@
 ---
-title: "Google API 参考总览"
+title: "Google 公开 API 完整参考总览：搜索、地图、Workspace 与 Cloud AI 服务"
 sidebarTitle: "概览"
-description: "Google 提供 Search、Maps、Workspace 和 Cloud 等 REST API，本页汇总所有公开 API 的端点、认证方式与请求格式。"
+description: "汇总 Google 全部公开 REST API 的完整参考，涵盖 Custom Search、Maps Platform、Gmail、Drive、Sheets、Google Ads 及 Cloud Vision API，包含端点地址、认证方式、请求格式与配额管理指南。"
 ---
 
 Google 面向开发者提供了一套完整的公开 API 生态系统，涵盖搜索、地图、办公协作、云计算与 AI 等多个领域。所有 API 均基于 **REST** 架构设计，以 **JSON** 格式返回响应数据，并采用语义化的**版本号**管理端点，确保向后兼容性。无论您是构建小型应用还是企业级系统，Google API 都能为您提供稳定、可扩展的服务能力。
@@ -26,7 +26,7 @@ https://[service].googleapis.com/[version]/[resource]
 
 ```bash
 # 使用 API 密钥向 Google Custom Search API 发起请求
-curl "https://customsearch.googleapis.com/customsearch/v1" \
+curl "https://www.googleapis.com/customsearch/v1" \
   --get \
   --data-urlencode "key=YOUR_API_KEY" \       # 您的 API 密钥
   --data-urlencode "cx=YOUR_SEARCH_ENGINE_ID" \ # 自定义搜索引擎 ID

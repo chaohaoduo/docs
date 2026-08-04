@@ -9,13 +9,13 @@ Google 正在将人工智能能力全面融入其产品矩阵，以 **Gemini** �
 ## Gemini 模型系列
 
 <CardGroup cols={3}>
-  <Card title="Gemini Ultra" icon="sparkles">
+  <Card title="Gemini Ultra" icon="sparkles" href="https://deepmind.google/technologies/gemini/ultra/">
     Google 迄今为止能力最强的模型，专为处理高度复杂的任务而设计，包括多模态推理、长文本理解与高难度代码生成。适用于需要最高精度的企业级场景。
   </Card>
-  <Card title="Gemini Pro" icon="bolt">
+  <Card title="Gemini Pro" icon="bolt" href="https://deepmind.google/technologies/gemini/pro/">
     性能与效率兼顾的均衡型模型，覆盖绝大多数日常与商业应用场景，包括内容创作、问答、摘要生成等。是大多数开发者和企业的首选。
   </Card>
-  <Card title="Gemini Nano" icon="microchip">
+  <Card title="Gemini Nano" icon="microchip" href="https://deepmind.google/technologies/gemini/nano/">
     专为设备端推理优化的轻量级模型，可在手机等终端设备上本地运行，保护用户隐私的同时实现低延迟响应。已集成于 Pixel 系列设备。
   </Card>
 </CardGroup>
@@ -45,22 +45,18 @@ curl -X POST \
       {
         "image": {
           "source": {
-            # 替换为您的公开图片 URL
             "imageUri": "https://example.com/sample-image.jpg"
           }
         },
         "features": [
           {
-            # 标签检测：识别图片中的物体与场景
             "type": "LABEL_DETECTION",
             "maxResults": 10
           },
           {
-            # 文字识别：提取图片中的文本内容
             "type": "TEXT_DETECTION"
           },
           {
-            # 安全检测：检测不适宜内容
             "type": "SAFE_SEARCH_DETECTION"
           }
         ]
@@ -86,7 +82,7 @@ curl -X POST \
     在 Vertex AI 控制台中，点击左侧菜单的 **Model Garden（模型花园）**，浏览 Google 提供的全系列基础模型，包括 Gemini 系列。
   </Step>
   <Step title="使用提示词体验 Gemini">
-    在 Model Garden 中找到 **Gemini** 模型卡片，点击「打开」进入 Vertex AI Studio。在文本输入框中输入您的提示词（例如："用中文写一份产品发布公告"），点击「提交」即可即时获得模型输出。
+    在 Model Garden 中找到 **Gemini** 模型卡片，点击「打开」进入 Vertex AI Studio。在文本输入框中输入您的提示词（例如：「用中文写一份产品发布公告」），点击「提交」即可即时获得模型输出。
   </Step>
 </Steps>
 
